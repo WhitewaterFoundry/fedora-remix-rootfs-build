@@ -1,0 +1,10 @@
+trigger:
+- master
+
+jobs:
+- template: architecture_template.yml
+  parameters:
+    arch: amd64
+- template: architecture_template.yml
+  parameters:
+    arch: arm64
