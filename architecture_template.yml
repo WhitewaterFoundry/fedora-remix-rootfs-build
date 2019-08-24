@@ -9,22 +9,22 @@ jobs:
   
   steps:
   - script: dnf -y install mock qemu-user-static git
-    displayname: 'Installing dependencies'
+    displayName: 'Installing dependencies'
 
   - script: mkdir dist
-    displayname: 'Create dist folder'
+    displayName: 'Create dist folder'
 
   - script: mkdir -m 0755 /dist/dev
-    displayname: 'Make sure /dev is created before later mount'
+    displayName: 'Make sure /dev is created before later mount'
   
   - script: mock --init --dnf --forcearch=$(BUILD_ARCH) --rootdir=./dist
-    displayname: 'Use mock to initialise chroot filesystem'
+    displayName: 'Use mock to initialise chroot filesystem'
 
   - script: umount $TMPDIR/dist/dev
-    displayname: 'Unmount /dev'
+    displayName: 'Unmount /dev'
 
   - script: git clone https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL
-    displayname: 'Cloning Fedora-Remix-for-WSL repo'
+    displayName: 'Cloning Fedora-Remix-for-WSL repo'
 
   - script: |
       cp ./Fedora-Remix-for-WSL/linux_files/dnf.conf ./dist/etc/dnf/dnf.conf
@@ -32,17 +32,17 @@ jobs:
       cp ./Fedora-Remix-for-WSL/linux_files/local.conf ./dist/etc/local.conf
       cp ./Fedora-Remix-for-WSL/linux_files/remix.sh ./dist/etc/profile.d/remix.sh
       cp ./Fedora-Remix-for-WSL/linux_files/wslutilities.repo ./dist/etc/yum.repos.d/wslutilties.repo
-    displayname: 'Moving Fedora Remix for WSL files into place'
+    displayName: 'Moving Fedora Remix for WSL files into place'
 
   - script: |
       systemd-nspawn -q -D $TMPDIR/dist /bin/bash << EOF
       dnf -y update
       dnf -y install generic-release --allowerasing
       EOF
-    displayname: 'Comply with Fedora Remix terms'
+    displayName: 'Comply with Fedora Remix terms'
 
   - script: cp ./Fedora-Remix-for-WSL/linux_files/os-release ./dist/etc/os-release
-    displayname: 'Overwrite os-release'
+    displayName: 'Overwrite os-release'
 
   - script: |
       systemd-nspawn -q -D $TMPDIR/dist /bin/bash << EOF
@@ -50,7 +50,7 @@ jobs:
       dnf -y autoremove
       dnf -y clean all
       EOF
-    displayname: 'Reinstall crypto-policies and clean up'
+    displayName: 'Reinstall crypto-policies and clean up'
 
   - script: |
       cd ./dist
