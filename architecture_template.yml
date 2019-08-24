@@ -8,7 +8,7 @@ jobs:
   container: fedora:latest
   
   steps:
-  - script: dnf -y install mock qemu-user-static git
+  - script: sudo dnf -y install mock qemu-user-static git
     displayName: 'Installing dependencies'
 
   - script: mkdir dist
