@@ -11,10 +11,10 @@ jobs:
     options: --cap-add=SYS_ADMIN --privileged
 
   steps:
-  - script: sudo groupadd -f -g 135 -r mock
-    displayName: 'Create mock group'
+#  - script: sudo groupadd -f -g 135 -r mock
+#    displayName: 'Create mock group'
   
-  - script: sudo dnf -y install qemu-user-static git mock
+  - script: sudo dnf -y install qemu-user-static git #mock
     displayName: 'Installing dependencies'
 
   - script: mkdir dist
@@ -23,11 +23,18 @@ jobs:
   - script: mkdir -m 0755 ./dist/dev
     displayName: 'Make sure /dev is created before later mount'
 
-  - script: sudo usermod -a -G mock $(whoami)
-    displayName: 'Add current user to mock group'
+#  - script: sudo usermod -a -G mock $(whoami)
+#    displayName: 'Add current user to mock group'
   
-  - script: sudo mock --init --dnf --target=$(MOCK_ARCH) --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist --trace
-    displayName: 'Use mock to initialise chroot filesystem'
+ # - script: sudo mock --init --dnf --target=$(MOCK_ARCH) --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist --trace
+ #   displayName: 'Use mock to initialise chroot filesystem'
+
+  - script: |
+      dnf install --releasever=30 --installroot=$(pwd)/dist \
+        --forcearch=$(MOCK_ARCH) --repo=fedora --repo=updates \
+        -y sudo nano @base
+    displayName:
+
 
   - script: umount ./dist/dev
     displayName: 'Unmount /dev'
