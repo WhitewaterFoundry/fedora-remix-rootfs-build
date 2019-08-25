@@ -49,7 +49,7 @@ jobs:
     displayName: 'Moving Fedora Remix for WSL files into place'
   
   - script: |
-      sudo systemd-nspawn -q -D --register=no --keep-unit ./dist /bin/bash << EOF
+      sudo systemd-nspawn --register=no --keep-unit -q -D ./dist /bin/bash << EOF
       dnf -y update
       dnf -y install generic-release --allowerasing
       EOF
