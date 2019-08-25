@@ -8,17 +8,14 @@ jobs:
 
   container:
     image: fedora:latest
-    options: --cap-add=SYS_ADMIN --privileged
+    options: --cap-add=SYS_ADMIN
 
   steps:
   - script: sudo groupadd mock
     displayName: 'Create mock group'
   
-  - script: sudo dnf -y install qemu-user-static git
+  - script: sudo dnf -y install qemu-user-static git mock
     displayName: 'Installing dependencies'
-
-  - script: sudo dnf -y install https://kojipkgs.fedoraproject.org//packages/mock/1.4.13/2.fc30/noarch/mock-1.4.13-2.fc30.noarch.rpm
-    displayName: 'Installing old mock'
 
   - script: mkdir dist
     displayName: 'Create dist folder'
