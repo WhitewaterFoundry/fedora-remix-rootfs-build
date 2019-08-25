@@ -5,7 +5,7 @@ jobs:
 - template: architecture_template.yml
   parameters:
     arch: amd64
-    mock_arch: amd64
+    mock_arch: x86_64
 - template: architecture_template.yml
   parameters:
     arch: arm64
