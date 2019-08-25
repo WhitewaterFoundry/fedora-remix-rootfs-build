@@ -4,10 +4,11 @@ jobs:
     vmImage: ubuntu-latest
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
+    MOCK_ARCH: ${{ parameters.mock_arch }}
 
   container:
     image: fedora:latest
-    options: --privileged
+    options: --cap-add=SYS_ADMIN
 
   steps:
   - script: sudo dnf -y install mock qemu-user-static git
@@ -25,7 +26,7 @@ jobs:
   - script: sudo usermod -a -G mock $(whoami)
     displayName: 'Add current user to mock group'
   
-  - script: mock --init --dnf --forcearch=$(BUILD_ARCH) --rootdir=$(pwd)/dist
+  - script: mock --init --dnf --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist
     displayName: 'Use mock to initialise chroot filesystem'
 
   - script: umount ./dist/dev
