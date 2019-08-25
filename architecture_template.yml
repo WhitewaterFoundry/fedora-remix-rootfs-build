@@ -5,8 +5,10 @@ jobs:
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
 
-  container: fedora:latest
-  
+  container:
+    image: fedora:latest
+    options: --privileged
+
   steps:
   - script: sudo dnf -y install mock qemu-user-static git
     displayName: 'Installing dependencies'
