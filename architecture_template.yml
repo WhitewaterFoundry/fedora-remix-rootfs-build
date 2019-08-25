@@ -26,7 +26,7 @@ jobs:
   - script: sudo usermod -a -G mock $(whoami)
     displayName: 'Add current user to mock group'
   
-  - script: mock --init --dnf --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist
+  - script: sudo mock --init --dnf --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist
     displayName: 'Use mock to initialise chroot filesystem'
 
   - script: umount ./dist/dev
