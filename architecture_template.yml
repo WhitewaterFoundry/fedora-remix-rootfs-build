@@ -30,11 +30,10 @@ jobs:
  #   displayName: 'Use mock to initialise chroot filesystem'
 
   - script: |
-      dnf install --releasever=30 --installroot=$(pwd)/dist \
+      sudo dnf install --releasever=30 --installroot=$(pwd)/dist \
         --forcearch=$(MOCK_ARCH) --repo=fedora --repo=updates \
         -y sudo nano @base
     displayName:
-
 
   - script: umount ./dist/dev
     displayName: 'Unmount /dev'
