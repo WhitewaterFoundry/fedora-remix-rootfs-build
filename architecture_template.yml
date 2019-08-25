@@ -16,6 +16,9 @@ jobs:
 
   - script: mkdir -m 0755 ./dist/dev
     displayName: 'Make sure /dev is created before later mount'
+
+  - script: sudo usermod -a -G mock $(whoami)
+    displayName: 'Add current user to mock group'
   
   - script: mock --init --dnf --forcearch=$(BUILD_ARCH) --rootdir=./dist
     displayName: 'Use mock to initialise chroot filesystem'
