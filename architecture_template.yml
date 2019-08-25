@@ -17,6 +17,9 @@ jobs:
   - script: mkdir -m 0755 ./dist/dev
     displayName: 'Make sure /dev is created before later mount'
 
+  - script: sudo groupadd mock
+    displayName: 'Create mock group'
+
   - script: sudo usermod -a -G mock $(whoami)
     displayName: 'Add current user to mock group'
   
