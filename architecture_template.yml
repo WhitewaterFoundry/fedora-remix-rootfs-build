@@ -8,7 +8,7 @@ jobs:
 
   container:
     image: fedora:latest
-    options: --cap-add=SYS_ADMIN --privileged
+    options: --cap-add=SYS_ADMIN
 
   steps:
   - script: sudo groupadd mock
