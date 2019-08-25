@@ -31,7 +31,7 @@ jobs:
 #  - script: sudo mock --init --dnf --target=$(MOCK_ARCH) --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist --trace
 #    displayName: 'Use mock to initialise chroot filesystem'
 
-  - script: sudo dnf install --releasever=30 --installroot=$(pwd)/dist --forcearch=$MOCK_ARCH --repo=fedora --repo=updates -y generic-release dnf systemd passwd nano bash coreutils
+  - script: sudo dnf install --releasever=30 --installroot=$(pwd)/dist --forcearch=$MOCK_ARCH --repo=fedora --repo=updates -y generic-release dnf systemd passwd nano bash coreutils dbus-daemon
     displayName: 'dnf --installroot option'
 
 #  - script: umount ./dist/dev
@@ -47,14 +47,9 @@ jobs:
       sudo cp ./Fedora-Remix-for-WSL/linux_files/remix.sh ./dist/etc/profile.d/remix.sh
       sudo cp ./Fedora-Remix-for-WSL/linux_files/wslutilities.repo ./dist/etc/yum.repos.d/wslutilties.repo
     displayName: 'Moving Fedora Remix for WSL files into place'
-
-  - script: |
-      systemctl daemon-reexec
-      systemctl start dbus-daemon
-    displayName: 'Starting systemd and dbus'
   
   - script: |
-      sudo systemd-nspawn -q -D ./dist /bin/bash << EOF
+      sudo systemd-nspawn -q -D --register=no --keep-unit ./dist /bin/bash << EOF
       dnf -y update
       dnf -y install generic-release --allowerasing
       EOF
