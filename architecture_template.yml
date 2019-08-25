@@ -13,8 +13,10 @@ jobs:
   steps:
 #  - script: sudo groupadd -f -g 135 -r mock
 #    displayName: 'Create mock group'
+
+ # removed mock approach pending outcome of this issue https://github.com/rpm-software-management/mock/issues/318
   
-  - script: sudo dnf -y install qemu-user-static git #mock
+  - script: sudo dnf -y install qemu-user-static git systemd-container #mock
     displayName: 'Installing dependencies'
 
   - script: mkdir dist
@@ -28,8 +30,6 @@ jobs:
   
 #  - script: sudo mock --init --dnf --target=$(MOCK_ARCH) --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist --trace
 #    displayName: 'Use mock to initialise chroot filesystem'
-
- # removed mock approach pending outcome of this issue https://github.com/rpm-software-management/mock/issues/318
 
   - script: sudo dnf install --releasever=30 --installroot=$(pwd)/dist --forcearch=$MOCK_ARCH --repo=fedora --repo=updates -y generic-release dnf systemd passwd nano bash coreutils
     displayName: 'dnf --installroot option'
