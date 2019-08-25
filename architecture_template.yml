@@ -59,7 +59,7 @@ jobs:
     displayName: 'Overwrite os-release'
 
   - script: |
-      sudo systemd-nspawn -q -D ./dist /bin/bash << EOF
+      sudo systemd-nspawn -q -D --register=no --keep-unit ./dist /bin/bash << EOF
       dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
       dnf -y autoremove
       dnf -y clean all
