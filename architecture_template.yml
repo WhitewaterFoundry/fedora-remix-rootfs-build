@@ -16,7 +16,7 @@ jobs:
 
  # removed mock approach pending outcome of this issue https://github.com/rpm-software-management/mock/issues/318
   
-  - script: sudo dnf -y install qemu-user-static git systemd-container #mock
+  - script: sudo dnf -y install qemu-user-static git systemd systemd-container dbus-daemon #mock
     displayName: 'Installing dependencies'
 
   - script: mkdir dist
@@ -48,6 +48,11 @@ jobs:
       sudo cp ./Fedora-Remix-for-WSL/linux_files/wslutilities.repo ./dist/etc/yum.repos.d/wslutilties.repo
     displayName: 'Moving Fedora Remix for WSL files into place'
 
+  - script: |
+      systemctl daemon-reexec
+      systemctl start dbus-daemon
+    displayName: 'Starting systemd and dbus'
+  
   - script: |
       sudo systemd-nspawn -q -D ./dist /bin/bash << EOF
       dnf -y update
