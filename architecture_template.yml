@@ -12,20 +12,29 @@ jobs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
+        az vm image accept-terms --urn tunnelbiz:fedora:fedora30:0.0.3
         az vm create \
           --resource-group Fedora \
           --name Build \
-          --image fedora30 \
+          --image 'tunnelbiz:fedora:fedora30:0.0.3' \
           --admin-username azureuser \
           --generate-ssh-keys
         vmipaddress=$(az vm show -d -g Fedora -n Build --query publicIps -o tsv)
+    displayName: 'Spinning Up Azure VM'
 
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: ssh -o "StrictHostKeyChecking no" azureuser@$vmipaddress
+    displayName: 'Logging into VM via ssh'
+  
   - task: AzureCLI@1
     inputs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
-      scriptLocation: 'inlineScript'
+      scriptLo cation: 'inlineScript'
       inlineScript: |
         az vm delete \
           --resource-group Fedora \
           --name Build \
           --yes
+    displayName: 'Shutting down Azure VM'
