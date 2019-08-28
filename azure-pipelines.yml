@@ -8,6 +8,7 @@ jobs:
     mock_arch: x86_64
     resource_group: 'Fedora'
     vm_image_urn: 'tunnelbiz:fedora:fedora30:0.0.3'
+    azure_sub: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
 - template: architecture_template.yml
   parameters:
     arch: arm64

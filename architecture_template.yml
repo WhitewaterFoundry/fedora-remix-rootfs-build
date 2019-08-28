@@ -11,7 +11,7 @@ jobs:
   steps:
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo 'az vm image accept-terms --urn '${VM_IMAGE_URN}
@@ -20,7 +20,7 @@ jobs:
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLocation: 'inlineScript'
       inlineScript: |
         BUILD_ID=$RANDOM
@@ -39,7 +39,7 @@ jobs:
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLocation: 'inlineScript'
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
@@ -54,7 +54,7 @@ jobs:
   
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLo cation: 'inlineScript'
       inlineScript: |
         az vm delete \
