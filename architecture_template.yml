@@ -7,6 +7,9 @@ jobs:
     MOCK_ARCH: ${{ parameters.mock_arch }}
     VM_IMAGE_URN: ${{ parameters.vm_image_urn }}
     RESOURCE_GROUP: ${{ parameters.resource_group }}
+    BUILD_ID: ''
+    BUILD_NAME: ''
+    VM_IP_ADDR: ''
 
   steps:
   - task: AzureCLI@1
