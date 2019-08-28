@@ -5,13 +5,14 @@ jobs:
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
+    AZURE_SUB: `Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)`
     RESOURCE_GROUP: 'Fedora'
     VM_IMAGE_URN: 'tunnelbiz:fedora:fedora30:0.0.3'
 
   steps:
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${AZURE_SUB}
       scriptLocation: 'inlineScript'
       inlineScript: |
         az vm image accept-terms --urn ${VM_IMAGE_URN}
@@ -19,24 +20,24 @@ jobs:
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${AZURE_SUB}
       scriptLocation: 'inlineScript'
       inlineScript: |
         BUILD_ID=$RANDOM
         echo 'Build ID '$RANDOM
-        BUILD_NAME='Build-'${MOCK_ARCH}'-'${BUILD_ID}
+        BUILD_NAME='Build-'${BUILD_ARCH}'-'${BUILD_ID}
         echo 'Build Name '$BUILD_NAME
         az vm create \
           --resource-group ${RESOURCE_GROUP} \
-          --name $BUILD_NAME \
-          --image $VM_IMAGE_URN \
+          --name ${BUILD_NAME} \
+          --image ${VM_IMAGE_URN} \
           --admin-username azureuser \
           --generate-ssh-keys
     displayName: 'Spinning up new Azure VM'
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${AZURE_SUB}
       scriptLocation: 'inlineScript'
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
@@ -45,12 +46,12 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o "StrictHostKeyChecking no" azureuser@$VM_IP_ADDR "echo 'hello world'"
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} "echo 'hello world'"
     displayName: 'Logging into Azure VM via ssh'
   
   - task: AzureCLI@1
     inputs:
-      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      azureSubscription: ${AZURE_SUB}
       scriptLo cation: 'inlineScript'
       inlineScript: |
         az vm delete \
