@@ -9,6 +9,7 @@ jobs:
     VM_SIZE: ${{ parameters.vm_size }}
     RESOURCE_GROUP: ${{ parameters.resource_group }}
     BUILD_GIT: ${{ parameters.build_git }}
+    BUILD_BRANCH: ${{ parameters.build_branch }}
     BUILD_SCRIPT: ${{ parameters.build_script }}
     TAR_DIR: ${{ parameters.tar_dir }}
     #import parameters as variables from azure-pipelines.yml
@@ -57,13 +58,26 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} "echo 'hello world'"
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} echo 'hello world'
     displayName: 'Logging into Azure VM via ssh'
 
-    # todo via ssh:
-    # git clone $BUILD_GIT .
-    # ./$BUILD_SCRIPT $BUILD_ARCH
-    # copy ./${TAR_DIR}/install.tar.gz to $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
+    - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT}
+    displayName: 'Cloning Build GitHub'
+
+    - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} bash ${BUILD_SCRIPT} ${BUILD_ARCH}
+    displayName: 'Running Build Script'
+
+    - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} cp /${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
+    displayName: 'Copying .tar.gz to Artifacts'
 
   - task: AzureCLI@1
     inputs:
