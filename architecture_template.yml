@@ -68,6 +68,7 @@ jobs:
         EOL
         echo 'Reading back ~/.ssh/config'
         cat ~/.ssh/config
+        sudo service sshd restart
     displayName: 'Configuring SSH'
 
   - task: Bash@3
