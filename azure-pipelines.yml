@@ -14,6 +14,7 @@ jobs:
     build_git: 'https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL'
     build_branch: master
     build_script: 'create-targz.sh'
+    build_deps: 'sudo dnf -y install git'
 - template: architecture_template.yml
   parameters:
     arch: arm64
@@ -26,3 +27,4 @@ jobs:
     build_git: 'https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL'
     build_branch: master
     build_script: 'create-targz.sh'
+    build_deps: 'sudo dnf -y install git'
