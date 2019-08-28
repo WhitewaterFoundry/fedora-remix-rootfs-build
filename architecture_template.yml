@@ -54,7 +54,7 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o "StrictHostKeyChecking no" azureuser@$VM_IP_ADDR "echo 'hello world'"
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} "echo 'hello world'"
     displayName: 'Logging into Azure VM via ssh'
   
   - task: AzureCLI@1
@@ -62,6 +62,7 @@ jobs:
       azureSubscription: ${{ parameters.azure_sub }}
       scriptLo cation: 'inlineScript'
       inlineScript: |
+        echo 'removing '${BUILD_NAME}' from '${RESOURCE_GROUP}
         az vm delete \
           --resource-group ${RESOURCE_GROUP} \
           --name ${BUILD_NAME} \
