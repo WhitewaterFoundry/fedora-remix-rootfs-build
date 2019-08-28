@@ -5,18 +5,29 @@ jobs:
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
-  
+    RESOURCE_GROUP: 'Fedora'
+    VM_IMAGE_URN: 'tunnelbiz:fedora:fedora30:0.0.3'
+
   steps:
   - task: AzureCLI@1
     inputs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
+        az vm image accept-terms --urn ${VM_IMAGE_URN}
+    displayName: 'Accepting Azure VM image terms'
+
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
         BUILD_ID=$RANDOM
+        BUILD_NAME='Build-'${MOCK_ARCH}'-'${BUILD_ID}
         az vm create \
-          --resource-group Fedora \
-          --name Build-${MOCK_ARCH}-${BUILD_ID} \
-          --image 'tunnelbiz:fedora:fedora30:0.0.3' \
+          --resource-group ${RESOURCE_GROUP} \
+          --name ${BUILD_NAME} \
+          --image ${VM_IMAGE_URN} \
           --admin-username azureuser \
           --generate-ssh-keys
     displayName: 'Spinning up new Azure VM'
@@ -26,13 +37,13 @@ jobs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        vmipaddress=$(az vm show -d -g Fedora -n Build-${MOCK_ARCH}-${BUILD_ID} --query publicIps -o tsv)
+        VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
       displayName: 'Getting IP address of new Azure VM'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o "StrictHostKeyChecking no" azureuser@$vmipaddress "echo 'hello world'"
+      script: ssh -o "StrictHostKeyChecking no" azureuser@$VM_IP_ADDR "echo 'hello world'"
     displayName: 'Logging into Azure VM via ssh'
   
   - task: AzureCLI@1
@@ -41,7 +52,7 @@ jobs:
       scriptLo cation: 'inlineScript'
       inlineScript: |
         az vm delete \
-          --resource-group Fedora \
-          --name Build-${MOCK_ARCH}-${BUILD_ID} \
+          --resource-group ${RESOURCE_GROUP} \
+          --name ${BUILD_NAME} \
           --yes
     displayName: 'Shutting down Azure VM'
