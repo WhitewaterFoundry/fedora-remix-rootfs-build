@@ -14,7 +14,7 @@ jobs:
       inlineScript: |
         az vm create \
           --resource-group Fedora \
-          --name Build \
+          --name Build-$MOCK_ARCH \
           --image 'tunnelbiz:fedora:fedora30:0.0.3' \
           --admin-username azureuser \
           --generate-ssh-keys
@@ -25,7 +25,7 @@ jobs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        vmipaddress=$(az vm show -d -g Fedora -n Build --query publicIps -o tsv)
+        vmipaddress=$(az vm show -d -g Fedora -n Build-$MOCK_ARCH --query publicIps -o tsv)
       displayName: 'Getting IP address of new VM'
 
   - task: Bash@3
@@ -41,6 +41,6 @@ jobs:
       inlineScript: |
         az vm delete \
           --resource-group Fedora \
-          --name Build \
+          --name Build-$MOCK_ARCH \
           --yes
     displayName: 'Shutting down Azure VM'
