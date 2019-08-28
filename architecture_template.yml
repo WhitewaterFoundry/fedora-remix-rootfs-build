@@ -5,29 +5,30 @@ jobs:
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
-    RESOURCE_GROUP: 'Fedora'
-    VM_IMAGE_URN: 'tunnelbiz:fedora:fedora30:0.0.3'
-    #AZURE_SUB is set globally in Azure Pipelines
+    VM_IMAGE_URN: ${{ parameters.vm_image_urn }}
+    RESOURCE_GROUP: ${{ parameters.resource_group }}
 
   steps:
   - task: AzureCLI@1
     inputs:
-      azureSubscription: AZURE_SUB
+      azureSubscription: 
       scriptLocation: 'inlineScript'
       inlineScript: |
-        AZURE_SUB: ''
+        echo 'az vm image accept-terms --urn '${VM_IMAGE_URN}
         az vm image accept-terms --urn ${VM_IMAGE_URN}
     displayName: 'Accepting Azure VM image terms'
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: AZURE_SUB
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLocation: 'inlineScript'
       inlineScript: |
         BUILD_ID=$RANDOM
         echo 'Build ID '$RANDOM
         BUILD_NAME='Build-'${BUILD_ARCH}'-'${BUILD_ID}
-        echo 'Build Name '$BUILD_NAME
+        echo 'Build Name '${BUILD_NAME}
+        echo 'Resource Group '${RESOURCE_GROUP}
+        echo 'Image '${VM_IMAGE_URN}
         az vm create \
           --resource-group ${RESOURCE_GROUP} \
           --name ${BUILD_NAME} \
@@ -38,10 +39,11 @@ jobs:
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: ${AZURE_SUB}
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLocation: 'inlineScript'
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
+        echo 'VM IP address '${VM_IP_ADDR}
     displayName: 'Getting IP address of new Azure VM'
 
   - task: Bash@3
@@ -52,7 +54,7 @@ jobs:
   
   - task: AzureCLI@1
     inputs:
-      azureSubscription: ${AZURE_SUB}
+      azureSubscription: ${{ parameters.azure_sub }}
       scriptLo cation: 'inlineScript'
       inlineScript: |
         az vm delete \
