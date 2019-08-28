@@ -7,20 +7,47 @@ jobs:
     MOCK_ARCH: ${{ parameters.mock_arch }}
 
   steps:
+
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      scriptLo cation: 'inlineScript'
+      inlineScript: |
+        az vm delete \
+          --resource-group Fedora \
+          --name Build \
+          --yes
+    displayName: 'Shutting down previous Azure VM, if running'
+    errorActionPreference: continue
+
   - task: AzureCLI@1
     inputs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
         az vm image accept-terms --urn tunnelbiz:fedora:fedora30:0.0.3
+      displayName: 'Accept Fedora terms'
+  
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
         az vm create \
           --resource-group Fedora \
           --name Build \
           --image 'tunnelbiz:fedora:fedora30:0.0.3' \
           --admin-username azureuser \
           --generate-ssh-keys
-        vmipaddress=$(az vm show -d -g Fedora -n Build --query publicIps -o tsv)
     displayName: 'Spinning Up Azure VM'
+
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        vmipaddress=$(az vm show -d -g Fedora -n Build --query publicIps -o tsv)
+      displayName: 'Getting IP address of new VM'
 
   - task: Bash@3
     inputs:
