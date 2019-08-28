@@ -23,11 +23,13 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         BUILD_ID=$RANDOM
+        echo 'Build ID '$RANDOM
         BUILD_NAME='Build-'${MOCK_ARCH}'-'${BUILD_ID}
+        echo 'Build Name '$BUILD_NAME
         az vm create \
           --resource-group ${RESOURCE_GROUP} \
-          --name ${BUILD_NAME} \
-          --image ${VM_IMAGE_URN} \
+          --name $BUILD_NAME \
+          --image $VM_IMAGE_URN \
           --admin-username azureuser \
           --generate-ssh-keys
     displayName: 'Spinning up new Azure VM'
@@ -38,7 +40,7 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
-      displayName: 'Getting IP address of new Azure VM'
+    displayName: 'Getting IP address of new Azure VM'
 
   - task: Bash@3
     inputs:
