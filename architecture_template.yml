@@ -38,21 +38,16 @@ jobs:
           --image ${VM_IMAGE_URN} \
           --admin-username azureuser \
           --generate-ssh-keys
-    displayName: 'Spinning up new Azure VM'
-
-  - task: AzureCLI@1
-    inputs:
-      azureSubscription: ${{ parameters.azure_sub }}
-      scriptLocation: 'inlineScript'
-      inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
         echo 'VM IP address '${VM_IP_ADDR}
-    displayName: 'Getting IP address of new Azure VM'
+    displayName: 'Spinning up new Azure VM and getting IP address'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o "StrictHostKeyChecking no" azureuser@$VM_IP_ADDR "echo 'hello world'"
+      script: |
+        echo 'Opening ssh connection to '$VM_IP_ADDR
+        ssh -o "StrictHostKeyChecking no" azureuser@$VM_IP_ADDR "echo 'hello world'"
     displayName: 'Logging into Azure VM via ssh'
   
   - task: AzureCLI@1
