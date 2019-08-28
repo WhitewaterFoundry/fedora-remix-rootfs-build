@@ -63,7 +63,7 @@ jobs:
         echo 'Adding to ~/.ssh/config'
         cat >>~/.ssh/config <<EOL
         Host Build
-            Hostname $VM_IP_ADDR
+            Hostname ${VM_IP_ADDR}
             StrictHostKeyChecking no
         EOL
         echo 'Reading back ~/.ssh/config'
