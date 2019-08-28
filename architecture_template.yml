@@ -20,7 +20,7 @@ jobs:
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: ${{ parameters.azure_sub }}
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
         BUILD_ID=$RANDOM
@@ -39,7 +39,7 @@ jobs:
 
   - task: AzureCLI@1
     inputs:
-      azureSubscription: ${{ parameters.azure_sub }}
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
@@ -54,7 +54,7 @@ jobs:
   
   - task: AzureCLI@1
     inputs:
-      azureSubscription: ${{ parameters.azure_sub }}
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLo cation: 'inlineScript'
       inlineScript: |
         az vm delete \
