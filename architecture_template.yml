@@ -10,3 +10,9 @@ jobs:
   - script: echo 'hello world'
     displayName: Echoing hello world
 
+  - task: AzureCLI@1
+    displayName: 'Spinning Up Fedora'
+    inputs:
+      azureSubscription: 'Pay-As-You-Go (e2391b26-a1f2-4713-b4b1-92857f6083d1)'
+      scriptLocation: inlineScript
+      inlineScript: 'echo ''on Azure CLI'''
