@@ -6,7 +6,11 @@ jobs:
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
     VM_IMAGE_URN: ${{ parameters.vm_image_urn }}
+    VM_SIZE: ${{ parameters.vm_size }}
     RESOURCE_GROUP: ${{ parameters.resource_group }}
+    BUILD_GIT: ${{ parameters.build_git }}
+    BUILD_SCRIPT: ${{ parameters.build_script }}
+    TAR_DIR: ${{ parameters.tar_dir }}
     #import parameters as variables from azure-pipelines.yml
 
   steps:
@@ -35,6 +39,7 @@ jobs:
           --resource-group ${RESOURCE_GROUP} \
           --name ${BUILD_NAME} \
           --image ${VM_IMAGE_URN} \
+          --size ${VM_SIZE} \
           --admin-username azureuser \
           --generate-ssh-keys
     displayName: 'Spinning up new Azure VM'
@@ -54,7 +59,12 @@ jobs:
       targetType: 'inline'
       script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} "echo 'hello world'"
     displayName: 'Logging into Azure VM via ssh'
-  
+
+    # todo via ssh:
+    # git clone $BUILD_GIT .
+    # ./$BUILD_SCRIPT $BUILD_ARCH
+    # copy ./${TAR_DIR}/install.tar.gz to $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
+
   - task: AzureCLI@1
     inputs:
       azureSubscription: ${{ parameters.azure_sub }}

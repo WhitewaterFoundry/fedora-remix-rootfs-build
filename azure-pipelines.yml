@@ -6,8 +6,10 @@ jobs:
   parameters:
     arch: amd64
     mock_arch: x86_64
-    resource_group: 'Fedora'
+    tar_dir: x64
+    resource_group: Fedora
     vm_image_urn: 'tunnelbiz:fedora:fedora30:0.0.3'
+    vm_size: 'Standard_D2s_v3'
     azure_sub: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
     build_git: 'https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL'
     build_script: 'create-targz.sh'
@@ -15,8 +17,10 @@ jobs:
   parameters:
     arch: arm64
     mock_arch: aarch64
-    resource_group: 'Fedora'
+    tar_dir: ARM64
+    resource_group: Fedora
     vm_image_urn: 'tunnelbiz:fedora:fedora30:0.0.3'
+    vm_size: 'Standard_D2s_v3'
     azure_sub: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
     build_git: 'https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL'
     build_script: 'create-targz.sh'
