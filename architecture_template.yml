@@ -12,7 +12,7 @@ jobs:
   steps:
   - task: AzureCLI@1
     inputs:
-      azureSubscription: ${AZURE_SUB}
+      azureSubscription: $AZURE_SUB
       scriptLocation: 'inlineScript'
       inlineScript: |
         az vm image accept-terms --urn ${VM_IMAGE_URN}
