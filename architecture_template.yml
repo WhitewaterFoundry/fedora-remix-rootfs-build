@@ -27,7 +27,7 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         BUILD_ID=$RANDOM
-        echo 'Build ID '$RANDOM
+        echo 'Build ID '$BUILD_ID
         BUILD_NAME='Build-'${BUILD_ARCH}'-'${BUILD_ID}
         echo 'Build Name '${BUILD_NAME}
         echo "##vso[task.setvariable variable=BUILD_NAME]${BUILD_NAME}"
@@ -60,7 +60,7 @@ jobs:
   - task: AzureCLI@1
     inputs:
       azureSubscription: ${{ parameters.azure_sub }}
-      scriptLo cation: 'inlineScript'
+      scriptLocation: 'inlineScript'
       inlineScript: |
         echo 'removing '${BUILD_NAME}' from '${RESOURCE_GROUP}
         az vm delete \
