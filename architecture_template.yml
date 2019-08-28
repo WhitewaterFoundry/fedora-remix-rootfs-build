@@ -5,7 +5,7 @@ jobs:
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
-    
+
   steps:
   - task: AzureCLI@1
     inputs:
@@ -15,10 +15,10 @@ jobs:
         az vm create \
           --resource-group Fedora \
           --name Build \
-          --image Fedora \
+          --image fedora30 \
           --admin-username azureuser \
           --generate-ssh-keys
-        vmipaddress=$(az vm show -d -g reousrceGroupName -n vmName --query publicIps -o tsv)
+        vmipaddress=$(az vm show -d -g Fedora -n Build --query publicIps -o tsv)
 
   - task: AzureCLI@1
     inputs:
