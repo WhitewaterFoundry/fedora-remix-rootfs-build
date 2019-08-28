@@ -6,68 +6,7 @@ jobs:
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
 
-  container:
-    image: fedora:latest
-    options: --cap-add=SYS_ADMIN --privileged
-
   steps:
-#  - script: sudo groupadd -f -g 135 -r mock
-#    displayName: 'Create mock group'
+  - script: echo 'hello world'
+    displayName: Echoing hello world
 
- # removed mock approach pending outcome of this issue https://github.com/rpm-software-management/mock/issues/318
-  
-  - script: sudo dnf -y install qemu-user-static git systemd systemd-container #mock
-    displayName: 'Installing dependencies'
-
-  - script: mkdir dist
-    displayName: 'Create dist folder'
-
-  - script: mkdir -m 0755 ./dist/dev
-    displayName: 'Make sure /dev is created before later mount'
-
-#  - script: sudo usermod -a -G mock $(whoami)
-#    displayName: 'Add current user to mock group'
-  
-#  - script: sudo mock --init --dnf --target=$(MOCK_ARCH) --forcearch=$(MOCK_ARCH) --rootdir=$(pwd)/dist --trace
-#    displayName: 'Use mock to initialise chroot filesystem'
-
-  - script: sudo dnf install --releasever=30 --installroot=$(pwd)/dist --forcearch=$MOCK_ARCH --repo=fedora --repo=updates -y generic-release dnf systemd passwd nano bash coreutils dbus-daemon
-    displayName: 'dnf --installroot option'
-
-#  - script: umount ./dist/dev
-#    displayName: 'Unmount /dev'
-
-  - script: git clone https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL
-    displayName: 'Cloning Fedora-Remix-for-WSL repo'
-
-  - script: |
-      sudo cp ./Fedora-Remix-for-WSL/linux_files/dnf.conf ./dist/etc/dnf/dnf.conf
-      sudo cp ./Fedora-Remix-for-WSL/linux_files/wsl.conf ./dist/etc/wsl.conf
-      sudo cp ./Fedora-Remix-for-WSL/linux_files/local.conf ./dist/etc/local.conf
-      sudo cp ./Fedora-Remix-for-WSL/linux_files/remix.sh ./dist/etc/profile.d/remix.sh
-      sudo cp ./Fedora-Remix-for-WSL/linux_files/wslutilities.repo ./dist/etc/yum.repos.d/wslutilties.repo
-    displayName: 'Moving Fedora Remix for WSL files into place'
-  
- # removed systemd-nspawn approach pending outcome of this issue https://github.com/systemd/systemd/issues/13400
- 
- # - script: |
- #     sudo systemd-nspawn --register=no --keep-unit -q -D ./dist /bin/bash << EOF
- #     dnf -y update
- #     dnf -y install generic-release --allowerasing
- #     EOF
- #   displayName: 'Comply with Fedora Remix terms'
-
-  - script: sudo cp ./Fedora-Remix-for-WSL/linux_files/os-release ./dist/etc/os-release
-    displayName: 'Overwrite os-release'
-
-  - script: |
-      sudo systemd-nspawn --register=no --keep-unit -q -D ./dist /bin/bash << EOF
-      dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
-      dnf -y autoremove
-      dnf -y clean all
-      EOF
-    displayName: 'Reinstall crypto-policies and clean up'
-
-  - script: |
-      cd ./dist
-      tar --exclude='boot/*' --exclude='var/cache/dnf/*' --numeric-owner -czf $(Build.ArtifactStagingDirectory)/install_$(BUILD_ARCH)_rootfs.tar.gz *

@@ -1,5 +1,5 @@
 trigger:
-- master
+- azure-vm-approach
 
 jobs:
 - template: architecture_template.yml
