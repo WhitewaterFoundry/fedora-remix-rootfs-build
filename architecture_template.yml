@@ -10,29 +10,40 @@ jobs:
   - task: AzureCLI@1
     inputs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
-      scriptLocation: 'inlineScript'
+      scriptLo cation: 'inlineScript'
       inlineScript: |
-        az vm create \
+        az vm delete \
           --resource-group Fedora \
-          --name Build-$MOCK_ARCH \
-          --image 'tunnelbiz:fedora:fedora30:0.0.3' \
-          --admin-username azureuser \
-          --generate-ssh-keys
-    displayName: 'Spinning Up Azure VM'
+          --name Build-${MOCK_ARCH} \
+          --yes
+    displayName: 'Shutting down any existing Azure VM'
 
   - task: AzureCLI@1
     inputs:
       azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        vmipaddress=$(az vm show -d -g Fedora -n Build-$MOCK_ARCH --query publicIps -o tsv)
-      displayName: 'Getting IP address of new VM'
+        az vm create \
+          --resource-group Fedora \
+          --name Build-${MOCK_ARCH} \
+          --image 'tunnelbiz:fedora:fedora30:0.0.3' \
+          --admin-username azureuser \
+          --generate-ssh-keys
+    displayName: 'Spinning up new Azure VM'
+
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        vmipaddress=$(az vm show -d -g Fedora -n Build-${MOCK_ARCH} --query publicIps -o tsv)
+      displayName: 'Getting IP address of new Azure VM'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
       script: ssh -o "StrictHostKeyChecking no" azureuser@$vmipaddress "echo 'hello world'"
-    displayName: 'Logging into VM via ssh'
+    displayName: 'Logging into Azure VM via ssh'
   
   - task: AzureCLI@1
     inputs:
@@ -41,6 +52,6 @@ jobs:
       inlineScript: |
         az vm delete \
           --resource-group Fedora \
-          --name Build-$MOCK_ARCH \
+          --name Build-${MOCK_ARCH} \
           --yes
     displayName: 'Shutting down Azure VM'
