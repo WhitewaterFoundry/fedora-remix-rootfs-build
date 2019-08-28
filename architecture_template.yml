@@ -64,6 +64,12 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
+      script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} dnf -y update; dnf -y install git
+    displayName: 'Installing Dependencies'
+
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
       script: ssh -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT}
     displayName: 'Cloning Build GitHub'
 
