@@ -54,7 +54,7 @@ jobs:
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
         echo 'VM IP address '${VM_IP_ADDR}
-        echo "##vso[task.setvariable variable=VM_IP_ADDR;isOutput=true]${VM_IP_ADDR}"
+        echo "##vso[task.setvariable variable=VM_IP_ADDR]${VM_IP_ADDR}"
     displayName: 'Getting IP address of new Azure VM'
 
   - task: Bash@3
@@ -94,7 +94,8 @@ jobs:
   pool:
     vmImage: ubuntu-latest
   variables:
-    BUILD_NAME: $[ dependencies.${{ parameters.arch }}.outputs['setvarStep.myOutputVar'] ]
+    BUILD_ARCH: ${{ parameters.arch }}
+    BUILD_NAME: $[ dependencies.BUILD_ARCH.outputs['setvarStep.BUILD_NAME'] ]
     RESOURCE_GROUP: ${{ parameters.resource_group }}
   steps:
   - task: AzureCLI@1
