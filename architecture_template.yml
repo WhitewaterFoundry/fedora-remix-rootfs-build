@@ -102,7 +102,7 @@ jobs:
       script: scp -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR}:/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
     displayName: 'Downloading .tar.gz to Artifacts'
 
-- job: Clean
+- job: Clean ${{ parameters.arch }}
   dependsOn: ${{ parameters.arch }}
   pool:
     vmImage: ubuntu-latest
