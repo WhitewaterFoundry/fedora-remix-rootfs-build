@@ -111,14 +111,14 @@ jobs:
     BUILD_NAME: $[ dependencies.${{ parameters.arch }}.outputs['setvarStep.myOutputVar'] ]
     RESOURCE_GROUP: ${{ parameters.resource_group }}
 
-  - task: AzureCLI@1
-    inputs:
-      azureSubscription: ${{ parameters.azure_sub }}
-      scriptLocation: 'inlineScript'
-      inlineScript: |
-        echo 'removing '${BUILD_NAME}' from '${RESOURCE_GROUP}
-        az vm delete \
-          --resource-group ${RESOURCE_GROUP} \
-          --name ${BUILD_NAME} \
-          --yes
-    displayName: 'Shutting down Azure VMs'
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: ${{ parameters.azure_sub }}
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo 'removing '${BUILD_NAME}' from '${RESOURCE_GROUP}
+          az vm delete \
+            --resource-group ${RESOURCE_GROUP} \
+            --name ${BUILD_NAME} \
+            --yes
+        displayName: 'Shutting down Azure VMs'
