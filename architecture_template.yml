@@ -12,7 +12,7 @@ jobs:
     BUILD_GIT: ${{ parameters.build_git }}
     BUILD_BRANCH: ${{ parameters.build_branch }}
     BUILD_SCRIPT: ${{ parameters.build_script }}
-    BUILD_DEPS: ${{ parameters.build.deps }}
+    BUILD_DEPS: ${{ parameters.build_deps }}
     TAR_DIR: ${{ parameters.tar_dir }}
     SSH_OPTIONS: 'StrictHostKeyChecking=no'
 
