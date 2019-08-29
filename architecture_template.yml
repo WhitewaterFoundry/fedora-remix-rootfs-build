@@ -70,25 +70,25 @@ jobs:
     inputs:
       targetType: 'inline'
       script: ssh -tt -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} ${BUILD_DEPS}
-    displayName: 'Installing Dependencies'
+    displayName: 'Installing Dependencies on Azure VM'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
       script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT} clone
-    displayName: 'Cloning Build GitHub'
+    displayName: 'Cloning Build GitHub on Azure VM'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
       script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} sudo bash ./clone/${BUILD_SCRIPT} ${BUILD_OPTS}
-    displayName: 'Running Build Script'
+    displayName: 'Running Build Script on Azure VM'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
       script: scp -o $SSH_OPTIONS azureuser@${VM_IP_ADDR}:./clone/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
-    displayName: 'Downloading .tar.gz to Artifacts'
+    displayName: 'Downloading .tar.gz to Artifacts from Azure VM'
 
   - task: AzureCLI@1
     inputs:
@@ -100,5 +100,5 @@ jobs:
           --resource-group ${RESOURCE_GROUP} \
           --name ${BUILD_NAME} \
           --yes
-    displayName: 'Shutting down Azure VMs'
+    displayName: 'Shutting down Azure VM'
     condition: always()

@@ -12,7 +12,7 @@ jobs:
     vm_size: Standard_D2s_v3
     azure_sub: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
     build_git: 'https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL'
-    build_branch: master
+    build_branch: azure_pipelines
     build_script: create-targz.sh
     build_opts: x86_64
     build_deps: sudo dnf -y install git
@@ -26,7 +26,7 @@ jobs:
     vm_size: Standard_D2s_v3
     azure_sub: 'Pay-As-You-Go(32f0131f-84dc-4502-99b2-c0a74a1423ce)'
     build_git: 'https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL'
-    build_branch: master
+    build_branch: azure_pipelines
     build_script: create-targz.sh
     build_opts: arm64
     build_deps: sudo dnf -y install git
