@@ -12,6 +12,7 @@ jobs:
     BUILD_GIT: ${{ parameters.build_git }}
     BUILD_BRANCH: ${{ parameters.build_branch }}
     BUILD_SCRIPT: ${{ parameters.build_script }}
+    BUILD_OPTS: ${{ parameters.build_opts }}
     BUILD_DEPS: ${{ parameters.build_deps }}
     TAR_DIR: ${{ parameters.tar_dir }}
     SSH_OPTIONS: 'StrictHostKeyChecking=no'
@@ -89,28 +90,6 @@ jobs:
       script: scp -o $SSH_OPTIONS azureuser@${VM_IP_ADDR}:./clone/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
     displayName: 'Downloading .tar.gz to Artifacts'
 
-  - task: AzureCLI@1
-    inputs:
-      azureSubscription: ${{ parameters.azure_sub }}
-      scriptLocation: 'inlineScript'
-      inlineScript: |
-        echo 'removing '${BUILD_NAME}' from '${RESOURCE_GROUP}
-        az vm delete \
-          --resource-group ${RESOURCE_GROUP} \
-          --name ${BUILD_NAME} \
-          --yes
-    displayName: 'Shutting down Azure VMs'
-
-- job: Clean_${{ parameters.arch }}
-  dependsOn: ${{ parameters.arch }}
-  condition: and(always(), eq(variables['Build.Reason'], 'Schedule'))
-  pool:
-    vmImage: ubuntu-latest
-  variables:
-    BUILD_ARCH: ${{ parameters.arch }}
-    BUILD_NAME: $[ dependencies.$(BUILD_ARCH).outputs['setvarStep.BUILD_NAME'] ]
-    RESOURCE_GROUP: ${{ parameters.resource_group }}
-  steps:
   - task: AzureCLI@1
     inputs:
       azureSubscription: ${{ parameters.azure_sub }}
