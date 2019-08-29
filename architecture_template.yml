@@ -101,3 +101,4 @@ jobs:
           --name ${BUILD_NAME} \
           --yes
     displayName: 'Shutting down Azure VMs'
+    condition: always()
