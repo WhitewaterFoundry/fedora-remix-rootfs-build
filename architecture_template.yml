@@ -74,7 +74,7 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT}
+      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT} .
     displayName: 'Cloning Build GitHub'
 
   - task: Bash@3
@@ -91,7 +91,7 @@ jobs:
 
 - job: Clean_${{ parameters.arch }}
   dependsOn: ${{ parameters.arch }}
-  condition: always()
+  condition: failure()
   pool:
     vmImage: ubuntu-latest
   variables:
