@@ -34,7 +34,7 @@ jobs:
         echo 'Build ID '$BUILD_ID
         BUILD_NAME='Build-'${BUILD_ARCH}'-'${BUILD_ID}
         echo 'Build Name '${BUILD_NAME}
-        echo "##vso[task.setvariable variable=BUILD_NAME]${BUILD_NAME}"
+        echo "##vso[task.setvariable variable=BUILD_NAME;isOutput=true]${BUILD_NAME}"
         echo 'Resource Group '${RESOURCE_GROUP}
         echo 'Image '${VM_IMAGE_URN}
         az vm create \
@@ -53,7 +53,7 @@ jobs:
       inlineScript: |
         VM_IP_ADDR=$(az vm show -d -g ${RESOURCE_GROUP} -n ${BUILD_NAME} --query publicIps -o tsv)
         echo 'VM IP address '${VM_IP_ADDR}
-        echo "##vso[task.setvariable variable=VM_IP_ADDR]${VM_IP_ADDR}"
+        echo "##vso[task.setvariable variable=VM_IP_ADDR;isOutput=true]${VM_IP_ADDR}"
     displayName: 'Getting IP address of new Azure VM'
 
   - task: Bash@3
@@ -102,6 +102,15 @@ jobs:
       script: scp -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR}:/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
     displayName: 'Downloading .tar.gz to Artifacts'
 
+- job: Cleanup Failed ${{ parameters.arch }}
+  dependsOn: ${{ parameters.arch }}
+  condition: failed()
+  pool:
+    vmImage: ubuntu-latest
+  variables:
+    BUILD_NAME: $[ dependencies.${{ parameters.arch }}.outputs['setvarStep.myOutputVar'] ]
+    RESOURCE_GROUP: ${{ parameters.resource_group }}
+
   - task: AzureCLI@1
     inputs:
       azureSubscription: ${{ parameters.azure_sub }}
@@ -112,4 +121,4 @@ jobs:
           --resource-group ${RESOURCE_GROUP} \
           --name ${BUILD_NAME} \
           --yes
-    displayName: 'Shutting down Azure VM'
+    displayName: 'Shutting down Azure VMs'
