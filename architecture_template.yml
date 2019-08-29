@@ -61,6 +61,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
+        echo 'ssh to '${VM_IP_ADDR}
         ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} echo 'hello world'
     displayName: 'Logging into Azure VM via ssh'
 
