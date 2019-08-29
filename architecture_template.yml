@@ -68,7 +68,7 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} ${BUILD_DEPS}
+      script: ssh -tt -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} ${BUILD_DEPS}
     displayName: 'Installing Dependencies'
 
   - task: Bash@3
@@ -96,7 +96,7 @@ jobs:
     vmImage: ubuntu-latest
   variables:
     BUILD_ARCH: ${{ parameters.arch }}
-    BUILD_NAME: $[ dependencies.BUILD_ARCH.outputs['setvarStep.BUILD_NAME'] ]
+    BUILD_NAME: $[ dependencies.$(BUILD_ARCH).outputs['setvarStep.BUILD_NAME'] ]
     RESOURCE_GROUP: ${{ parameters.resource_group }}
   steps:
   - task: AzureCLI@1
