@@ -60,15 +60,15 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        echo 'Adding to ~/.ssh/config'
-        cat >>~/.ssh/config <<EOL
-        Host Build
+        echo 'Adding to /etc/ssh/sshd_config'
+        sudo tee -a / > /dev/null <<EOT
+        Host ${BUILD_NAME}
             Hostname ${VM_IP_ADDR}
             StrictHostKeyChecking no
-        EOL
-        echo 'Reading back ~/.ssh/config'
-        cat ~/.ssh/config
-        sudo service sshd restart
+        EOT
+        echo 'Reading back /etc/ssh/sshd_config'
+        sudo cat /etc/ssh/sshd_config
+        sudo systemctl restart ssh
     displayName: 'Configuring SSH'
 
   - task: Bash@3
