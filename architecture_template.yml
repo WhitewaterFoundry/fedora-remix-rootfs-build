@@ -74,19 +74,19 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT} .
+      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT} clone
     displayName: 'Cloning Build GitHub'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} bash ${BUILD_SCRIPT} ${BUILD_ARCH}
+      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} bash ./clone/${BUILD_SCRIPT} ${BUILD_ARCH}
     displayName: 'Running Build Script'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: scp -o $SSH_OPTIONS azureuser@${VM_IP_ADDR}:/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
+      script: scp -o $SSH_OPTIONS azureuser@${VM_IP_ADDR}:./clone/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
     displayName: 'Downloading .tar.gz to Artifacts'
 
   - task: AzureCLI@1
