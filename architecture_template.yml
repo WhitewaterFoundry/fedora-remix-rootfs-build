@@ -81,7 +81,9 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} sudo bash ./clone/${BUILD_SCRIPT} ${BUILD_OPTS}
+      script: |
+        echo 'Running build script in '$(pwd)
+        ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} sudo bash ./clone/${BUILD_SCRIPT} ${BUILD_OPTS}
     displayName: 'Running Build Script on Azure VM'
 
   - task: Bash@3
