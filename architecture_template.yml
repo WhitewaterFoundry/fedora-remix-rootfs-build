@@ -104,6 +104,7 @@ jobs:
 
 - job: Clean_${{ parameters.arch }}
   dependsOn: ${{ parameters.arch }}
+  condition: always()
   pool:
     vmImage: ubuntu-latest
   variables:
