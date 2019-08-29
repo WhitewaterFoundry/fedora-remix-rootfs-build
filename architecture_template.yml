@@ -88,10 +88,22 @@ jobs:
       targetType: 'inline'
       script: scp -o $SSH_OPTIONS azureuser@${VM_IP_ADDR}:/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
     displayName: 'Downloading .tar.gz to Artifacts'
+    
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: ${{ parameters.azure_sub }}
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo 'removing '${BUILD_NAME}' from '${RESOURCE_GROUP}
+        az vm delete \
+          --resource-group ${RESOURCE_GROUP} \
+          --name ${BUILD_NAME} \
+          --yes
+    displayName: 'Shutting down Azure VMs'
 
 - job: Clean_${{ parameters.arch }}
   dependsOn: ${{ parameters.arch }}
-  condition: failure ()
+  condition: failed()
   pool:
     vmImage: ubuntu-latest
   variables:
