@@ -3,6 +3,7 @@ jobs:
   pool:
     vmImage: ubuntu-latest
   variables:
+    #import parameters as variables from azure-pipelines.yml
     BUILD_ARCH: ${{ parameters.arch }}
     MOCK_ARCH: ${{ parameters.mock_arch }}
     VM_IMAGE_URN: ${{ parameters.vm_image_urn }}
@@ -13,7 +14,7 @@ jobs:
     BUILD_SCRIPT: ${{ parameters.build_script }}
     BUILD_DEPS: ${{ parameters.build.deps }}
     TAR_DIR: ${{ parameters.tar_dir }}
-    #import parameters as variables from azure-pipelines.yml
+    SSH_OPTIONS: 'StrictHostKeyChecking=no'
 
   steps:
   - task: AzureCLI@1
@@ -60,46 +61,31 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        echo 'Adding to /etc/ssh/sshd_config'
-        sudo tee -a / > /dev/null <<EOT
-        Host ${BUILD_NAME}
-            Hostname ${VM_IP_ADDR}
-            StrictHostKeyChecking no
-        EOT
-        echo 'Reading back /etc/ssh/sshd_config'
-        sudo cat /etc/ssh/sshd_config
-        sudo systemctl restart ssh
-    displayName: 'Configuring SSH'
-
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: |
-        ssh azureuser@${VM_IP_ADDR} echo 'hello world'
+        ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} echo 'hello world'
     displayName: 'Logging into Azure VM via ssh'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh azureuser@${VM_IP_ADDR} ${BUILD_DEPS}
+      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} ${BUILD_DEPS}
     displayName: 'Installing Dependencies'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT}
+      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} git clone -b ${BUILD_BRANCH} ${BUILD_GIT}
     displayName: 'Cloning Build GitHub'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: ssh azureuser@${VM_IP_ADDR} bash ${BUILD_SCRIPT} ${BUILD_ARCH}
+      script: ssh -o $SSH_OPTIONS azureuser@${VM_IP_ADDR} bash ${BUILD_SCRIPT} ${BUILD_ARCH}
     displayName: 'Running Build Script'
 
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: scp -o "StrictHostKeyChecking no" azureuser@${VM_IP_ADDR}:/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
+      script: scp -o $SSH_OPTIONS azureuser@${VM_IP_ADDR}:/${TAR_DIR}/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$BUILD_ARCH_rootfs.tar.gz
     displayName: 'Downloading .tar.gz to Artifacts'
 
 - job: Clean_${{ parameters.arch }}
