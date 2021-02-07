@@ -14,7 +14,7 @@ jobs:
       mkdir rootfs
     displayName: 'Creating rootfs folder'
 
-  - script: sudo bash create-targz.sh $(ARCH) rootfs
+  - script: sudo bash -x create-targz.sh $(ARCH) "$PWD/rootfs"
     displayName: 'Build image'
 
   - script: mv $(ARCHDIR)/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$(ARCHDIR)_rootfs.tar.gz
