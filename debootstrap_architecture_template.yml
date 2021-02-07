@@ -1,0 +1,31 @@
+jobs:
+- job: ${{ parameters.arch }}
+  pool:
+      name: Fedora
+      demands:
+        - Agent.OSArchitecture -equals ${{ parameters.agent_arch }}
+  variables:
+    ARCH: ${{ parameters.arch }}
+    ARCHDIR: ${{ parameters.arch_dir }}
+  steps:
+
+  - script: |
+      sudo rm -rf rootfs
+      mkdir rootfs
+    displayName: 'Creating rootfs folder'
+
+  - script: sudo bash -c "create-targz.sh $(ARCH) rootfs"
+    displayName: 'Build image'
+
+  - script: mv $(ARCHDIR)/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$(ARCHDIR)_rootfs.tar.gz
+    displayName: 'Copy for publishing'
+
+  - task: PublishBuildArtifacts@1
+
+  - script: |
+      sudo shutdown -r 1
+
+    displayName: Clean up
+
+
+
