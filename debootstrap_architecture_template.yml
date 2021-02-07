@@ -17,7 +17,7 @@ jobs:
   - script: sudo bash -x create-targz.sh $(ARCH) "$PWD/rootfs"
     displayName: 'Build image'
 
-  - script: mv $(ARCHDIR)/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$(ARCHDIR)_rootfs.tar.gz
+  - script: cp $(ARCHDIR)/install.tar.gz $(Build.ArtifactStagingDirectory)/install_$(ARCHDIR)_rootfs.tar.gz
     displayName: 'Copy for publishing'
 
   - task: PublishBuildArtifacts@1

@@ -10,7 +10,7 @@ ARCHDIR=""
 source /etc/os-release
 
 function build() {
-  # Install dependencies
+  echo "##[group] Install dependencies"
   dnf -y update
   dnf -y install mock qemu-user-static
   if [ "$(uname -i)" != "$ARCH" ]; then
@@ -21,7 +21,7 @@ function build() {
   cd "${TMPDIR}"
   mkdir "${TMPDIR}"/dist
 
-  # Make sure /dev is created before later mount
+  echo "##[section] Make sure /dev is created before later mount"
   mkdir -m 0755 "${TMPDIR}"/dist/dev
 
   # Use mock to initialise chroot filesystem
