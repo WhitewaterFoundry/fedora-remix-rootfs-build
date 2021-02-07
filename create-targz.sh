@@ -115,6 +115,7 @@ EOF
 
   # Create filesystem tar, excluding unnecessary files
   cd "${TMPDIR}"/dist
+  mkdir -p "${ORIGINDIR}"/"${ARCHDIR}"
   tar --exclude='boot/*' --exclude=proc --exclude=dev --exclude=sys --exclude='var/cache/dnf/*' --numeric-owner -czf "${ORIGINDIR}"/"${ARCHDIR}"/install.tar.gz ./*
 
   # Return to origin directory
