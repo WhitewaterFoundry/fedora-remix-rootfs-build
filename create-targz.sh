@@ -12,9 +12,8 @@ source /etc/os-release
 function build() {
   # Install dependencies
   dnf -y update
-  dnf -y install mock
+  dnf -y install mock qemu-user-static
   if [ "$(uname -i)" != "$ARCH" ]; then
-    dnf -y install qemu-user-static
     systemctl restart systemd-binfmt.service
   fi
 
