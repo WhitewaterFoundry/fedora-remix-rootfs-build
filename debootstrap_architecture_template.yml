@@ -2,14 +2,40 @@ jobs:
 - job: startAgent
   pool: 
     vmImage: ubuntu-latest
+  variables:
+    AWS_INSTANCE_ID: ${{ parameters.aws_instance_id }}
+
   steps:
 
   - script: |
       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       unzip awscliv2.zip
       sudo ./aws/install
+    displayName: 'Installing AWS CLI'
+
+  - task: DownloadSecureFile@1
+    name: awsCredentials
+    inputs:
+      secureFile: 'credentials'
+
+  - task: DownloadSecureFile@2
+    name: awsConfig
+    inputs:
+      secureFile: 'config'
+
+  - script: |
+      mkdir -p "${HOME}/.aws"
+      cp "$(awsCredentials.secureFilePath)" "${HOME}/.aws/credentials"
+      cp "$(awsConfig.secureFilePath)" "${HOME}/.aws/config"
+      aws ec2 start-instances --instance-ids $(AWS_INSTANCE_ID)
+    displayName: 'Copy credentials'
+
+  - script: |
+
+    displayName: 'Start instance'
 
 - job: ${{ parameters.arch }}
+  condition: eq(1,2)
   dependsOn: [ startAgent ]
   pool:
     name: Fedora

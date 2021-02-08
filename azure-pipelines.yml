@@ -9,11 +9,13 @@ stages:
       arch: x86_64
       agent_arch: X64
       arch_dir: x64
+      aws_instance_id: i-05fe6f5add361dcd7
 - stage: arm64
   dependsOn: []
   jobs:
-  - template: debootstrap_architecture_template.yml
-    parameters:
-      arch: arm64
-      agent_arch: ARM64
-      arch_dir: ARM64
+    - template: debootstrap_architecture_template.yml
+      parameters:
+        arch: arm64
+        agent_arch: ARM64
+        arch_dir: ARM64
+        aws_instance_id: i-0abed7e4b7595271e
