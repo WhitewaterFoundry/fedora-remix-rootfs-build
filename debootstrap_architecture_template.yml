@@ -35,7 +35,6 @@ jobs:
     displayName: 'Start instance'
 
 - job: ${{ parameters.arch }}
-  condition: eq(1,2)
   dependsOn: [ startAgent ]
   pool:
     name: Fedora
