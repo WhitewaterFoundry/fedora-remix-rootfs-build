@@ -18,7 +18,7 @@ jobs:
     inputs:
       secureFile: 'credentials'
 
-  - task: DownloadSecureFile@2
+  - task: DownloadSecureFile@1
     name: awsConfig
     inputs:
       secureFile: 'config'
