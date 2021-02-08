@@ -4,6 +4,16 @@ trigger:
 stages:
 - stage: amd64
   jobs:
+  - job: startAgent
+    pool: 
+      vmImage: ubuntu-latest
+    steps:
+
+    - script: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+
   - template: debootstrap_architecture_template.yml
     parameters:
       arch: x86_64
