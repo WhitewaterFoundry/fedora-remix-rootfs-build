@@ -95,6 +95,13 @@ EOF
 chmod u+s "$(command -v ping)"
 EOF
 
+  echo "##[section] Downgrade iproute and lock"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+dnf -y install 'dnf-command(versionlock)'
+dnf -y install iproute-5.8.0
+dnf versionlock add iproute
+EOF
+
   echo "##[section] Reinstall crypto-policies and clean up"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
