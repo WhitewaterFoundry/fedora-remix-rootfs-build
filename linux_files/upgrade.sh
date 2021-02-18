@@ -43,7 +43,7 @@ sudo curl -L -f "${BASE_URL}/linux_files/00-remix.sh" -o /etc/profile.d/00-remix
 sudo curl -L -f "${BASE_URL}/linux_files/local.conf" -o /etc/fonts/local.conf
 
 # Fix a problem with the current WSL2 kernel
-if [[ $( dnf info --installed iproute | grep -c '5.8' ) == 0 ]]; then
+if [[ $( sudo dnf info --installed iproute | grep -c '5.8' ) == 0 ]]; then
 
   sudo dnf -y install 'dnf-command(versionlock)' > /dev/null 2>&1
   sudo dnf -y install iproute-5.8.0 > /dev/null 2>&1
