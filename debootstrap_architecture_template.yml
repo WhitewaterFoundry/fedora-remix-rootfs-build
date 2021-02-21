@@ -1,6 +1,6 @@
 jobs:
 - job: startAgent
-  pool: 
+  pool:
     vmImage: ubuntu-latest
   variables:
     AWS_INSTANCE_ID: ${{ parameters.aws_instance_id }}

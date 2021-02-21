@@ -33,6 +33,8 @@ fi
 
 # Update the release and main startup script files
 sudo curl -L -f "${BASE_URL}/linux_files/00-remix.sh" -o /etc/profile.d/00-remix.sh
+sudo mkdir -p /etc/fish/conf.d/
+sudo curl -f "${BASE_URL}/linux_files/00-remix.fish" -o /etc/fish/conf.d/00-remix.fish
 
 (
   source /etc/os-release
