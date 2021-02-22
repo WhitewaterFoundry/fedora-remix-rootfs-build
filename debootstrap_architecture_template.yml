@@ -7,12 +7,6 @@ jobs:
 
   steps:
 
-  - script: |
-      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      unzip awscliv2.zip
-      sudo ./aws/install --update
-    displayName: 'Installing AWS CLI'
-
   - task: DownloadSecureFile@1
     name: awsCredentials
     inputs:
@@ -27,15 +21,16 @@ jobs:
       mkdir -p "${HOME}/.aws"
       cp "$(awsCredentials.secureFilePath)" "${HOME}/.aws/credentials"
       cp "$(awsConfig.secureFilePath)" "${HOME}/.aws/config"
-      aws ec2 start-instances --instance-ids $(AWS_INSTANCE_ID)
     displayName: 'Copy credentials'
 
   - script: |
-
+      aws ec2 start-instances --instance-ids $(AWS_INSTANCE_ID)
     displayName: 'Start instance'
 
 - job: ${{ parameters.arch }}
   dependsOn: [ startAgent ]
+  workspace:
+    clean: all
   pool:
     name: Fedora
     demands:
@@ -61,7 +56,10 @@ jobs:
   - task: PublishBuildArtifacts@1
 
   - script: |
+      sudo rm -rf /home/fedora/myagent/_work/*
+      sudo rm -rf /tmp/rootfs
       sudo shutdown -r 1
+    condition: always()
 
     displayName: Clean up
 
