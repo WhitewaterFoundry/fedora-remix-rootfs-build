@@ -9,26 +9,29 @@ end
 if [ -n $WSL_INTEROP ]
     #Export an environment variable for helping other processes
     set -x WSL2 1
-    # enable external x display for WSL 2
+    
+    if [ -z $DISPLAY ]
+        # enable external x display for WSL 2
 
-    set ipconfig_exec (wslpath 'C:\Windows\System32\ipconfig.exe')
-    if command -q ipconfig.exe
-        set ipconfig_exec (command -s ipconfig.exe)
-    end
+        set ipconfig_exec (wslpath 'C:\Windows\System32\ipconfig.exe')
+        if command -q ipconfig.exe
+            set ipconfig_exec (command -s ipconfig.exe)
+        end
 
-    set wsl2_d_tmp ($ipconfig_exec ^/dev/null | grep -n -m 1 "Default Gateway.*: [0-9a-z]" | cut -d : -f 1)
+        set wsl2_d_tmp ($ipconfig_exec ^/dev/null | grep -n -m 1 "Default Gateway.*: [0-9a-z]" | cut -d : -f 1)
 
-    if [ -n $wsl2_d_tmp ]
+        if [ -n $wsl2_d_tmp ]
 
-        set wsl2_d_tmp ($ipconfig_exec ^/dev/null | sed (math $wsl2_d_tmp - 4)','(math $wsl2_d_tmp + 0)'!d' | string replace -fr '^.*IPv4.*:\s*(\S+).*$' '$1')
-        set -x DISPLAY $wsl2_d_tmp:0
-    else
-        set wsl2_d_tmp (grep nameserver /etc/resolv.conf | awk '{print $2}')
-        set -x DISPLAY $wsl2_d_tmp:0
-    end
+            set wsl2_d_tmp ($ipconfig_exec ^/dev/null | sed (math $wsl2_d_tmp - 4)','(math $wsl2_d_tmp + 0)'!d' | string replace -fr '^.*IPv4.*:\s*(\S+).*$' '$1')
+            set -x DISPLAY $wsl2_d_tmp:0
+        else
+            set wsl2_d_tmp (grep nameserver /etc/resolv.conf | awk '{print $2}')
+            set -x DISPLAY $wsl2_d_tmp:0
+        end
 
-    set -e wsl2_d_tmp
-    set -e ipconfig_exec
+        set -e wsl2_d_tmp
+        set -e ipconfig_exec
+    end      
 else
     # enable external x display for WSL 1
     set -x DISPLAY localhost:0
