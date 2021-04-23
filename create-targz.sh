@@ -7,7 +7,7 @@ TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
 ARCHDIR=""
 
-source /etc/os-release
+source linux-files/os-release-34
 
 function build() {
   echo "##[section] Install dependencies"
@@ -25,7 +25,7 @@ function build() {
   mkdir -m 0755 "${TMPDIR}"/dist/dev
 
   echo "##[section] Use mock to initialise chroot filesystem"
-  mock --init --dnf --forcearch="${ARCH}" --rootdir="${TMPDIR}"/dist
+  mock --root="fedora-${VERSION_ID}-${$ARCH}" --init --dnf --forcearch="${ARCH}" --rootdir="${TMPDIR}"/dist
 
   echo "##[section] Bind mount current /dev to new chroot/dev"
   # (fixes '/dev/null: Permission denied' errors)
