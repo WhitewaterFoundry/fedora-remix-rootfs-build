@@ -7,7 +7,7 @@ TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
 ARCHDIR=""
 
-source linux-files/os-release-34
+source linux_files/os-release-34
 
 function build() {
   echo "##[section] Install dependencies"
