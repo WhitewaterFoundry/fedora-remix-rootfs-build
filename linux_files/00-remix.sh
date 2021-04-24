@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Only the default WSL user should run this script
 if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
@@ -46,13 +46,6 @@ setup_display() {
 }
 
 setup_display
-
-# enable external libgl if mesa is not installed
-if (command -v glxinfo >/dev/null 2>&1); then
-  unset LIBGL_ALWAYS_INDIRECT
-else
-  export LIBGL_ALWAYS_INDIRECT=1
-fi
 
 # if dbus-launch is installed then load it
 if (command -v dbus-launch >/dev/null 2>&1); then
