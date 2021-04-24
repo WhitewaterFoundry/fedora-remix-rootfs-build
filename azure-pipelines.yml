@@ -9,7 +9,7 @@ stages:
       arch: x86_64
       agent_arch: X64
       arch_dir: x64
-      aws_instance_id: 	i-072ca495c9043e36d
+      aws_instance_id:  i-072a16dc951b04894
 - stage: arm64
   dependsOn: []
   jobs:
@@ -18,4 +18,4 @@ stages:
         arch: arm64
         agent_arch: ARM64
         arch_dir: ARM64
-        aws_instance_id: i-0abed7e4b7595271e
+        aws_instance_id: i-069e94572a8a70572
