@@ -47,13 +47,6 @@ setup_display() {
 
 setup_display
 
-# enable external libgl if mesa is not installed
-if (command -v glxinfo >/dev/null 2>&1); then
-  unset LIBGL_ALWAYS_INDIRECT
-else
-  export LIBGL_ALWAYS_INDIRECT=1
-fi
-
 # if dbus-launch is installed then load it
 if (command -v dbus-launch >/dev/null 2>&1); then
   eval "$(timeout 2s dbus-launch --auto-syntax)"

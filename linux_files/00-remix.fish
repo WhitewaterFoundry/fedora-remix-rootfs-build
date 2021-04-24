@@ -9,7 +9,7 @@ end
 if [ -n $WSL_INTEROP ]
     #Export an environment variable for helping other processes
     set -x WSL2 1
-    
+
     if [ -z $DISPLAY ]
         # enable external x display for WSL 2
 
@@ -31,7 +31,7 @@ if [ -n $WSL_INTEROP ]
 
         set -e wsl2_d_tmp
         set -e ipconfig_exec
-    end      
+    end
 else
     # enable external x display for WSL 1
     set -x DISPLAY localhost:0
@@ -40,16 +40,9 @@ else
     set -e WSL2
 end
 
-# enable external libgl if mesa is not installed
-if command -q glxinfo
-    set -e LIBGL_ALWAYS_INDIRECT
-else
-    set -x LIBGL_ALWAYS_INDIRECT 1
-end
-
 # if dbus-launch is installed then load it
 if command -q dbus-launch
-  set -x DBUS_SESSION_BUS_ADDRESS (timeout 2s dbus-launch sh -c 'echo "$DBUS_SESSION_BUS_ADDRESS"')
+    set -x DBUS_SESSION_BUS_ADDRESS (timeout 2s dbus-launch sh -c 'echo "$DBUS_SESSION_BUS_ADDRESS"')
 end
 
 # speed up some GUI apps like gedit
