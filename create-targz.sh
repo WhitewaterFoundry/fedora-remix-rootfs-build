@@ -120,6 +120,16 @@ EOF
 dnf -y install wslu
 EOF
 
+  echo "##[section] 'Setup Whitewater Foundry repo"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | bash
+EOF
+
+  echo "##[section] 'Install MESA"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+dnf -y install glx-utils mesa-dri-drivers
+EOF
+
   echo "##[section] Copy dnf.conf"
   cp "${ORIGINDIR}"/linux_files/dnf.conf "${TMPDIR}"/dist/etc/dnf/dnf.conf
 
