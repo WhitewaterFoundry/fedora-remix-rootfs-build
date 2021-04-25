@@ -122,7 +122,7 @@ EOF
 
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | bash
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=33 bash
 EOF
 
   echo "##[section] 'Install MESA"
