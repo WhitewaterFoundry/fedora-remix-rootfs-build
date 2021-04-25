@@ -127,7 +127,9 @@ EOF
 
   echo "##[section] 'Install MESA"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-dnf -y install glx-utils mesa-dri-drivers
+dnf -y install 'dnf-command(versionlock)'
+dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
+dnf versionlock add mesa-dri-drivers mesa-libGL
 EOF
 
   echo "##[section] Copy dnf.conf"
