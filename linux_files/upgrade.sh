@@ -12,8 +12,8 @@ rm -r /tmp/sum.txt
 # the script has changed? run the newer one
 if [ ${CHANGED} -eq 1 ]; then
   echo Running the updated script
-  #bash /usr/local/bin/upgrade.sh
-  #exit 0
+  bash /usr/local/bin/upgrade.sh
+  exit 0
 fi
 
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
@@ -54,7 +54,7 @@ fi
 
 # Install mesa
 source /etc/os-release
-if [[ ${VERSION_ID} -ge 34 && $( sudo dnf info --installed mesa-libGL | grep -c '21.0.2-wsl' ) == 0 ]]; then
+if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -ge 34 && $( sudo dnf info --installed mesa-libGL | grep -c '21.0.2-wsl' ) == 0 ]]; then
   sudo dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL
 fi
