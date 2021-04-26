@@ -7,7 +7,7 @@ TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
 ARCHDIR=""
 
-source /etc/os-release
+source linux_files/os-release-34
 
 function build() {
   echo "##[section] Install dependencies"
@@ -25,7 +25,7 @@ function build() {
   mkdir -m 0755 "${TMPDIR}"/dist/dev
 
   echo "##[section] Use mock to initialise chroot filesystem"
-  mock --init --dnf --forcearch="${ARCH}" --rootdir="${TMPDIR}"/dist
+  mock --root="fedora-${VERSION_ID}-${ARCH}" --init --dnf --forcearch="${ARCH}" --rootdir="${TMPDIR}"/dist
 
   echo "##[section] Bind mount current /dev to new chroot/dev"
   # (fixes '/dev/null: Permission denied' errors)
@@ -115,9 +115,21 @@ EOF
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-\${VERSION_ID}-${ARCH}"
+  source /etc/os-release && dnf -y copr enable trustywolf/wslu "\${ID_LIKE}-\${VERSION_ID}-${ARCH}"
 )
 dnf -y install wslu
+EOF
+
+  echo "##[section] 'Setup Whitewater Foundry repo"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=33 bash
+EOF
+
+  echo "##[section] 'Install MESA"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+dnf -y install 'dnf-command(versionlock)'
+dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
+dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 EOF
 
   echo "##[section] Copy dnf.conf"

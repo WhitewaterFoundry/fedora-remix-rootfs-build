@@ -51,3 +51,10 @@ if [[ $( sudo dnf info --installed iproute | grep -c '5.8' ) == 0 ]]; then
   sudo dnf -y install iproute-5.8.0 > /dev/null 2>&1
   sudo dnf versionlock add iproute > /dev/null 2>&1
 fi
+
+# Install mesa
+source /etc/os-release
+if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -ge 34 && $( sudo dnf info --installed mesa-libGL | grep -c '21.0.2-wsl' ) == 0 ]]; then
+  sudo dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
+  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
+fi
