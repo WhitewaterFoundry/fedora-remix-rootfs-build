@@ -60,3 +60,11 @@ if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -ge 34 && $( sudo dnf info --instal
   sudo dnf -y install --allowerasing mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
+
+if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 1 ]]; then
+  (
+    source /etc/os-release
+    sudo dnf -y copr remove wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+    sudo dnf -y copr enable trustywolf/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+  )
+fi
