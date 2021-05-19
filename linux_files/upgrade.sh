@@ -10,24 +10,28 @@ CHANGED=$?
 rm -r /tmp/sum.txt
 
 # the script has changed? run the newer one
-if [ ${CHANGED} -eq 1 ]; then
+if [[ ${CHANGED} -eq 1 ]]; then
   echo Running the updated script
   bash /usr/local/bin/upgrade.sh
   exit 0
 fi
 
+if [[ -z ${WSL2} ]]; then
+  sudo dnf config-manager --save --setopt=*.gpgcheck=0
+fi
+
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
 sudo rm -f /var/lib/rpm/.rpm.lock
-sudo dnf -y update --nogpgcheck
+sudo dnf -y update
 sudo rm -f /var/lib/rpm/.rpm.lock
 
 # WSLU 3 is not installed
-if [ "$(wslsys -v | grep -c "v3\.")" -eq 0 ]; then
+if [[ "$(wslsys -v | grep -c "v3\.")" -eq 0 ]]; then
   (
     source /etc/os-release && sudo dnf -y copr enable trustywolf/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
   )
   sudo rm -f /var/lib/rpm/.rpm.lock
-  sudo dnf -y update wslu --nogpgcheck
+  sudo dnf -y update wslu
   sudo rm -f /var/lib/rpm/.rpm.lock
 fi
 
@@ -47,18 +51,18 @@ sudo curl -L -f "${BASE_URL}/linux_files/local.conf" -o /etc/fonts/local.conf
 # Fix a problem with the current WSL2 kernel
 if [[ $( sudo dnf info --installed iproute | grep -c '5.8' ) == 0 ]]; then
 
-  sudo dnf -y install 'dnf-command(versionlock)' --nogpgcheck > /dev/null 2>&1
-  sudo dnf -y install iproute-5.8.0 --nogpgcheck > /dev/null 2>&1
-  sudo dnf versionlock add iproute --nogpgcheck > /dev/null 2>&1
+  sudo dnf -y install 'dnf-command(versionlock)' > /dev/null 2>&1
+  sudo dnf -y install iproute-5.8.0 > /dev/null 2>&1
+  sudo dnf versionlock add iproute > /dev/null 2>&1
 fi
 
 # Install mesa
 source /etc/os-release
 if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -ge 34 && $( sudo dnf info --installed mesa-libGL | grep -c '21.0.2-wsl' ) == 0 ]]; then
-  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi --nogpgcheck
+  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
   curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=33 bash
-  sudo dnf -y install --allowerasing mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils --nogpgcheck
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi --nogpgcheck
+  sudo dnf -y install --allowerasing mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
+  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
 
 if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 1 ]]; then
