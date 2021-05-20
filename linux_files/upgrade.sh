@@ -16,10 +16,6 @@ if [[ ${CHANGED} -eq 1 ]]; then
   exit 0
 fi
 
-if [[ -z ${WSL2} ]]; then
-  sudo dnf config-manager --save --setopt=*.gpgcheck=0
-fi
-
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
 sudo rm -f /var/lib/rpm/.rpm.lock
 sudo dnf -y update
@@ -65,10 +61,14 @@ if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -ge 34 && $( sudo dnf info --instal
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
 
-if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 1 ]]; then
+if [[ $(sudo dnf -y copr list | grep -c "trustywolf/wslu") == 1 ]]; then
   (
     source /etc/os-release
-    sudo dnf -y copr remove wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
-    sudo dnf -y copr enable trustywolf/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+    sudo dnf -y copr remove trustywolf/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+    sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
   )
+fi
+
+if [[ -z ${WSL2} ]]; then
+  sudo dnf config-manager --save --setopt=*.gpgcheck=0
 fi
