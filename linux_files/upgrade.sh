@@ -70,7 +70,7 @@ if [[ $(sudo dnf -y copr list | grep -c "trustywolf/wslu") == 1 ]]; then
 fi
 
 if [[ -z ${WSL2} ]]; then
-  gpgcheck_enabled=$(dnf config-manager --dump '*' | grep -c "gpgcheck = 1")
+  gpgcheck_enabled=$(sudo dnf config-manager --dump '*' | grep -c "gpgcheck = 1")
 
   if [[ ${gpgcheck_enabled} -ge 0 ]]; then
     sudo curl -L -f "${BASE_URL}/linux_files/check-dnf.sh" -o /etc/profile.d/check-dnf.sh
