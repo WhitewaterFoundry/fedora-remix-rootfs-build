@@ -127,11 +127,13 @@ EOF
 
   echo "##[section] 'Install fix for WSL1 and gpgcheck"
   cp "${ORIGINDIR}"/linux_files/check-dnf.sh "${TMPDIR}"/dist/etc/profile.d
+  cp "${ORIGINDIR}"/linux_files/check-dnf.fish "${TMPDIR}"/dist/etc/fish/conf.d/
   cp "${ORIGINDIR}"/linux_files/check-dnf "${TMPDIR}"/dist/usr/bin
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
 chmod -w /usr/bin/check-dnf
 chmod u+x /usr/bin/check-dnf
+chmod -x "/etc/fish/conf.d/check-dnf.fish
 EOF
 
   echo "##[section] 'Install MESA"
