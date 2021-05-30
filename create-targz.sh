@@ -133,7 +133,7 @@ EOF
 echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
 chmod -w /usr/bin/check-dnf
 chmod u+x /usr/bin/check-dnf
-chmod -x "/etc/fish/conf.d/check-dnf.fish
+chmod -x /etc/fish/conf.d/check-dnf.fish
 EOF
 
   echo "##[section] 'Install MESA"
