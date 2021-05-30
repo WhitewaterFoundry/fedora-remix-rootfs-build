@@ -123,7 +123,15 @@ EOF
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=33 bash
-dnf config-manager --save --setopt=*.gpgcheck=0
+EOF
+
+  echo "##[section] 'Install fix for WSL1 and gpgcheck"
+  cp "${ORIGINDIR}"/linux_files/check-dnf.sh "${TMPDIR}"/dist/etc/profile.d
+  cp "${ORIGINDIR}"/linux_files/check-dnf "${TMPDIR}"/dist/usr/bin
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
+chmod -w /usr/bin/check-dnf
+chmod u+x /usr/bin/check-dnf
 EOF
 
   echo "##[section] 'Install MESA"
