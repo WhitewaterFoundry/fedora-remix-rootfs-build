@@ -74,6 +74,7 @@ if [[ -z ${WSL2} ]]; then
 
   if [[ ${gpgcheck_enabled} -gt 0 ]]; then
     sudo curl -L -f "${BASE_URL}/linux_files/check-dnf.sh" -o /etc/profile.d/check-dnf.sh
+    sudo curl -L -f "${BASE_URL}/linux_files/check-dnf.fish" -o /etc/fish/conf.d/check-dnf.fish
     sudo curl -L -f "${BASE_URL}/linux_files/check-dnf" -o /usr/bin/check-dnf
     echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
     sudo chmod -w /usr/bin/check-dnf
