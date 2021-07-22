@@ -18,11 +18,11 @@ if test -n "$WSL_INTEROP"
             set ipconfig_exec (command -s ipconfig.exe)
         end
 
-        set wsl2_d_tmp ($ipconfig_exec ^/dev/null | grep -n -m 1 "Default Gateway.*: [0-9a-z]" | cut -d : -f 1)
+        set wsl2_d_tmp ($ipconfig_exec 2>/dev/null | grep -n -m 1 "Default Gateway.*: [0-9a-z]" | cut -d : -f 1)
 
         if test -n "$wsl2_d_tmp"
 
-            set wsl2_d_tmp ($ipconfig_exec ^/dev/null | sed (math $wsl2_d_tmp - 4)','(math $wsl2_d_tmp + 0)'!d' | string replace -fr '^.*IPv4.*:\s*(\S+).*$' '$1')
+            set wsl2_d_tmp ($ipconfig_exec 2>/dev/null | sed (math $wsl2_d_tmp - 4)','(math $wsl2_d_tmp + 0)'!d' | string replace -fr '^.*IPv4.*:\s*(\S+).*$' '$1')
             set --export DISPLAY "$wsl2_d_tmp:0"
         else
             set wsl2_d_tmp (grep nameserver /etc/resolv.conf | awk '{print $2}')
@@ -55,7 +55,7 @@ if command -q cmd.exe
 
     # Here have a issue: %HOMEDRIVE% might be using a custom set location
     # moving cmd to where Windows is installed might help: %SYSTEMDRIVE%
-    set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' ^/dev/null | string replace -a \r '')
+    set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | string replace -a \r '')
 
     # shellcheck disable=SC2155
     set --export WIN_HOME (wslpath -u $wHomeWinPath)
