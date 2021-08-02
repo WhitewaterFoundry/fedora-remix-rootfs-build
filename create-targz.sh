@@ -80,7 +80,7 @@ EOF
 
   echo "##[section] Install bash-completion, vim, wget"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-dnf -y install bash-completion vim wget distribution-gpg-keys
+dnf -y install bash-completion vim wget distribution-gpg-keys rsync
 
 echo 'source /etc/vimrc' > /etc/skel/.vimrc
 echo 'set background=dark' >> /etc/skel/.vimrc
