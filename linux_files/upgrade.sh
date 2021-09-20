@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo -n -e '\033]9;4;3;100\033\\'
+
 BASE_URL="https://raw.githubusercontent.com/WhitewaterFoundry/fedora-remix-rootfs-build/master"
 sha256sum /usr/local/bin/upgrade.sh >/tmp/sum.txt
 sudo curl -L -f "${BASE_URL}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
@@ -83,3 +85,5 @@ if [[ -z ${WSL2} ]]; then
     sudo check-dnf
   fi
 fi
+
+echo -n -e '\033]9;4;0;100\033\\'
