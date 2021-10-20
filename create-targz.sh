@@ -7,7 +7,7 @@ TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
 ARCHDIR=""
 
-source linux_files/os-release-34
+source linux_files/os-release-35
 
 function build() {
   echo "##[section] Install dependencies"
@@ -98,13 +98,6 @@ EOF
 chmod u+s "$(command -v ping)"
 EOF
 
-  echo "##[section] Downgrade iproute and lock"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-dnf -y install 'dnf-command(versionlock)'
-dnf -y install iproute-5.8.0
-dnf versionlock add iproute
-EOF
-
   echo "##[section] Reinstall crypto-policies and clean up"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
@@ -115,7 +108,7 @@ EOF
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-\${VERSION_ID}-${ARCH}"
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-34-${ARCH}"
 )
 dnf -y install wslu
 EOF
