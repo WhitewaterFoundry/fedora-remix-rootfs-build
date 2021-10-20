@@ -108,7 +108,7 @@ EOF
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-34-${ARCH}"
+  #source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-34-${ARCH}"
 )
 dnf -y install wslu
 EOF
