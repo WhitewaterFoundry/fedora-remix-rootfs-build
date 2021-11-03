@@ -19,7 +19,7 @@ setup_display() {
     # enable external x display for WSL 2
 
     ipconfig_exec=$(wslpath "C:\\Windows\\System32\\ipconfig.exe")
-    if (command -v ipconfig.exe &>/dev/null); then
+    if (command -v ipconfig.exe >/dev/null 2>&1); then
       ipconfig_exec=$(command -v ipconfig.exe)
     fi
 
