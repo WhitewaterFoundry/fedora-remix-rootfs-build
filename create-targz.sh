@@ -66,9 +66,8 @@ function build() {
   echo "##[section] Comply with Fedora Remix terms"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y update
-dnf -y remove fedora-release-identity-basic
 dnf -y install generic-release --allowerasing  --releasever="${VERSION_ID}"
-dnf -y install audit setup fedora-repos-modular shadow-utils
+dnf -y reinstall fedora-repos-modular fedora-repos
 EOF
 
   echo "##[section] Overwrite os-release provided by generic-release"
