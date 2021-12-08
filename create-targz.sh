@@ -106,18 +106,9 @@ dnf -y autoremove
 dnf -y clean all
 EOF
 
-#  echo "##[section] 'Setup WSLU"
-#  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-#(
-#  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${VERSION_ID}-${ARCH}"
-#)
-#dnf -y install wslu
-#EOF
-
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=34 bash
-dnf -y install wslu
 EOF
 
   echo "##[section] 'Install fix for WSL1 and gpgcheck"
@@ -136,6 +127,14 @@ EOF
 dnf -y install 'dnf-command(versionlock)'
 dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
+EOF
+
+  echo "##[section] 'Setup WSLU"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+(
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${VERSION_ID}-${ARCH}"
+)
+dnf -y install wslu
 EOF
 
   echo "##[section] Copy dnf.conf"
