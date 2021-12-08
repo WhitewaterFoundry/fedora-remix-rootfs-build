@@ -61,6 +61,7 @@ function build() {
 
   cp "${ORIGINDIR}"/linux_files/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
+  ln -s /usr/local/bin/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/update.sh
 
   echo "##[section] Comply with Fedora Remix terms"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
@@ -105,17 +106,17 @@ dnf -y autoremove
 dnf -y clean all
 EOF
 
-#   echo "##[section] 'Setup WSLU"
-#   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-# (
-#   source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-34-${ARCH}"
-# )
-# dnf -y install wslu
-# EOF
+  echo "##[section] 'Setup WSLU"
+  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+(
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${VERSION_ID}-${ARCH}"
+)
+dnf -y install wslu
+EOF
 
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=33 bash
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=34 bash
 EOF
 
   echo "##[section] 'Install fix for WSL1 and gpgcheck"

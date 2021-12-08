@@ -26,7 +26,7 @@ sudo rm -f /var/lib/rpm/.rpm.lock
 # WSLU 3 is not installed
 if [[ "$(wslsys -v | grep -c "v3\.")" -eq 0 ]]; then
   (
-    source /etc/os-release && sudo dnf -y copr enable trustywolf/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+    source /etc/os-release && sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
   )
   sudo rm -f /var/lib/rpm/.rpm.lock
   sudo dnf -y update wslu --nogpgcheck
@@ -36,7 +36,7 @@ fi
 # Update the release and main startup script files
 sudo curl -L -f "${BASE_URL}/linux_files/00-remix.sh" -o /etc/profile.d/00-remix.sh
 sudo mkdir -p /etc/fish/conf.d/
-sudo curl -f "${BASE_URL}/linux_files/00-remix.fish" -o /etc/fish/conf.d/00-remix.fish
+sudo curl -L -f "${BASE_URL}/linux_files/00-remix.fish" -o /etc/fish/conf.d/00-remix.fish
 
 (
   source /etc/os-release
