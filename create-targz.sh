@@ -7,6 +7,8 @@ TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
 ARCHDIR=""
 
+mkdir -p "${TMPDIR}"
+
 source linux_files/os-release-35
 
 function build() {
@@ -107,7 +109,7 @@ EOF
 
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=34 bash
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=35 bash
 EOF
 
   echo "##[section] 'Install fix for WSL1 and gpgcheck"
@@ -124,7 +126,7 @@ EOF
   echo "##[section] 'Install MESA"
   systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
-dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
+dnf -y install mesa-dri-drivers-21.3.1-wsl.x86_64 mesa-libGL-21.3.1-wsl.x86_64 glx-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 EOF
 
