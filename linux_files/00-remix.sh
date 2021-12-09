@@ -19,7 +19,7 @@ setup_display() {
     # enable external x display for WSL 2
 
     ipconfig_exec=$(wslpath "C:\\Windows\\System32\\ipconfig.exe")
-    if (command -v ipconfig.exe &>/dev/null); then
+    if (command -v ipconfig.exe >/dev/null 2>&1); then
       ipconfig_exec=$(command -v ipconfig.exe)
     fi
 
@@ -62,7 +62,7 @@ alias clear='clear -x'
 alias ll='ls -al'
 
 # Check if we have Windows Path
-if (command -v cmd.exe >/dev/null 2>&1); then
+if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 
   # Create a symbolic link to the windows home
 
