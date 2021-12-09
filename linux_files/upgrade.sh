@@ -43,6 +43,13 @@ if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 34 && $( sudo dnf info --instal
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
 
+if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 35 && $( sudo dnf info --installed mesa-libGL | grep -c '21.2.3-wsl' ) == 0 ]]; then
+  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
+  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=35 bash
+  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
+  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
+fi
+
 if [[ $(sudo dnf -y copr list | grep -c "trustywolf/wslu") == 1 ]]; then
   (
     source /etc/os-release
