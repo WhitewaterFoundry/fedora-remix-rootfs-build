@@ -9,7 +9,7 @@ sudo chmod +x /usr/local/bin/upgrade.sh
 # Do not change above this line to avoid update errors
 
 if [[ ! -L /usr/local/bin/update.sh  ]]; then
-  ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
+  sudo ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
 fi
 
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
