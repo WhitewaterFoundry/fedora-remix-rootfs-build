@@ -6,6 +6,12 @@ base_url="https://raw.githubusercontent.com/WhitewaterFoundry/fedora-remix-rootf
 sudo curl -L -f "${base_url}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
 sudo chmod +x /usr/local/bin/upgrade.sh
 
+# Do not change above this line to avoid update errors
+
+if [[ ! -L /usr/local/bin/update.sh  ]]; then
+  ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
+fi
+
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
 sudo rm -f /var/lib/rpm/.rpm.lock
 sudo dnf -y update --nogpgcheck
