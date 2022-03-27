@@ -65,8 +65,15 @@ function build() {
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
   ln -s /usr/local/bin/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/update.sh
 
+  cp "${ORIGINDIR}"/linux_files/start-systemd.sudoers "${TMPDIR}"/dist/etc/sudoers.d/start-systemd
+  cp "${ORIGINDIR}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
+  chmod u+x "${TMPDIR}"/dist/usr/local/bin/start-systemd
+
+  cp "${ORIGINDIR}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
+  chmod u+x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
+
   echo "##[section] Comply with Fedora Remix terms"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y update
 dnf -y install generic-release --allowerasing  --releasever="${VERSION_ID}"
 dnf -y reinstall fedora-repos-modular fedora-repos
@@ -76,12 +83,12 @@ EOF
   cp "${ORIGINDIR}"/linux_files/os-release-"${VERSION_ID}" "${TMPDIR}"/dist/etc/os-release
 
   echo "##[section] Install cracklibs-dicts"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn --resolv-conf="replace-host" -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install --allowerasing --skip-broken cracklib-dicts
 EOF
 
   echo "##[section] Install bash-completion, vim, wget"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install bash-completion vim wget distribution-gpg-keys rsync
 
 echo 'source /etc/vimrc' > /etc/skel/.vimrc
@@ -96,19 +103,19 @@ echo 'set show-all-if-unmodified on' >> /etc/skel/.inputrc
 EOF
 
   echo "##[section] Fix ping"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 chmod u+s "$(command -v ping)"
 EOF
 
   echo "##[section] Reinstall crypto-policies and clean up"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
 dnf -y autoremove
 dnf -y clean all
 EOF
 
   echo "##[section] 'Setup Whitewater Foundry repo"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=35 bash
 EOF
 
@@ -116,7 +123,7 @@ EOF
   cp "${ORIGINDIR}"/linux_files/check-dnf.sh "${TMPDIR}"/dist/etc/profile.d
   cp "${ORIGINDIR}"/linux_files/check-dnf.fish "${TMPDIR}"/dist/etc/fish/conf.d/
   cp "${ORIGINDIR}"/linux_files/check-dnf "${TMPDIR}"/dist/usr/bin
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
 chmod -w /usr/bin/check-dnf
 chmod u+x /usr/bin/check-dnf
@@ -124,14 +131,14 @@ chmod -x /etc/fish/conf.d/check-dnf.fish
 EOF
 
   echo "##[section] 'Install MESA"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
-sudo dnf -y install mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
+dnf -y install mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 EOF
 
   echo "##[section] 'Setup WSLU"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
   source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${VERSION_ID}-${ARCH}"
 )
