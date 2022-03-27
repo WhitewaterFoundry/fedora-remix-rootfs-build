@@ -133,7 +133,7 @@ EOF
   echo "##[section] 'Install MESA"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
-sudo dnf -y install mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
+dnf -y install mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 EOF
 
