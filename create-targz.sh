@@ -67,10 +67,10 @@ function build() {
 
   cp "${ORIGINDIR}"/linux_files/start-systemd.sudoers "${TMPDIR}"/dist/etc/sudoers.d/start-systemd
   cp "${ORIGINDIR}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
-  chmod u+x "${TMPDIR}"/dist/usr/local/bin/start-systemd
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
   cp "${ORIGINDIR}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
-  chmod u+x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
 
   echo "##[section] Comply with Fedora Remix terms"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
