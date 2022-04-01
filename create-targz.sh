@@ -35,7 +35,7 @@ function build() {
   mount --bind /dev "${TMPDIR}"/dist/dev
 
   echo "##[section] Install required packages, exclude unnecessary packages to reduce image size"
-  dnf --installroot="${TMPDIR}"/dist --forcearch="${ARCH}" -y install @core libgcc glibc-langpack-en --exclude=grub\*,sssd-kcm,sssd-common,sssd-client,linux-firmware,dracut*,plymouth,parted,e2fsprogs,iprutils,iptables,ppc64-utils,selinux-policy*,policycoreutils,sendmail,kernel*,firewalld,fedora-release,fedora-logos,fedora-release-notes --allowerasing
+  dnf --installroot="${TMPDIR}"/dist --forcearch="${ARCH}" --releasever="${VERSION_ID}" -y install @core libgcc glibc-langpack-en --exclude=grub\*,sssd-kcm,sssd-common,sssd-client,linux-firmware,dracut*,plymouth,parted,e2fsprogs,iprutils,iptables,ppc64-utils,selinux-policy*,policycoreutils,sendmail,kernel*,firewalld,fedora-release,fedora-logos,fedora-release-notes --allowerasing
 
   echo "##[section] Unmount /dev"
   umount "${TMPDIR}"/dist/dev
