@@ -2,6 +2,7 @@
 
 echo "##[section] Set environment"
 set -e
+set -x
 ORIGINDIR=$(pwd)
 TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
