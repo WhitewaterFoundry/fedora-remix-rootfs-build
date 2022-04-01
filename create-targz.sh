@@ -9,7 +9,7 @@ ARCHDIR=""
 
 mkdir -p "${TMPDIR}"
 
-source linux_files/os-release-35
+source linux_files/os-release-36
 
 function build() {
   echo "##[section] Install dependencies"
