@@ -31,6 +31,7 @@ fi
 sudo curl -L -f "${base_url}/linux_files/00-remix.sh" -o /etc/profile.d/00-remix.sh
 sudo mkdir -p /etc/fish/conf.d/
 sudo curl -L -f "${base_url}/linux_files/00-remix.fish" -o /etc/fish/conf.d/00-remix.fish
+sudo chmod -x,+r /etc/profile.d/00-remix.sh
 
 (
   source /etc/os-release
@@ -74,9 +75,17 @@ if [[ -z ${WSL2} ]]; then
     echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
     sudo chmod -w /usr/bin/check-dnf
     sudo chmod u+x /usr/bin/check-dnf
+    sudo chmod -x,+r /etc/profile.d/check-dnf.sh
 
     sudo check-dnf
   fi
 fi
+
+# Upgrade Systemd
+sudo curl -L -f "${base_url}/linux_files/start-systemd.sudoers" -o /etc/sudoers.d/start-systemd
+sudo curl -L -f "${base_url}/linux_files/start-systemd.sh" -o /usr/local/bin/start-systemd
+sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
+sudo chmod u+x /usr/local/bin/start-systemd
+sudo chmod u+x /usr/local/bin/wslsystemctl
 
 echo -n -e '\033]9;4;0;100\033\\'
