@@ -5,6 +5,10 @@ if not id -Gn | string match -rq 'adm.*wheel|wheel.*adm'
     exit
 end
 
+if test -n "$XRDP_SESSION"
+    exit
+end
+
 # check whether it is WSL1 for WSL2
 if test -n "$WSL_INTEROP"
     #Export an enviroment variable for helping other processes
