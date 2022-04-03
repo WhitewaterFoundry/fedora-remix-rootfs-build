@@ -3,8 +3,8 @@
 if [ -z "${WSL_INTEROP}" ]; then
     echo "Error: start-systemd requires WSL 2."
     echo " -> Try upgrading your distribution to WSL 2."
-    echo "Alternatively you can try wsl-systemctl which provides basic functionality for WSL 1."
-    echo " -> wsl-systemctl start <my-service-name>"
+    echo "Alternatively you can try wslsystemctl which provides basic functionality for WSL 1."
+    echo " -> sudo wslsystemctl start <my-service-name>"
     exit 0
 fi
 
