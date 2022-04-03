@@ -6,6 +6,10 @@ if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
 fi
 
 setup_display() {
+  if [ -n "${XRDP_SESSION}" ]; then
+    return
+  fi
+  
   # check whether it is WSL1 or WSL2
   if [ -n "${WSL_INTEROP}" ]; then
     if [ -n "${DISPLAY}" ]; then
