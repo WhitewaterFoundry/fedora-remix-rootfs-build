@@ -87,9 +87,8 @@ if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 fi
 
 # Fix $PATH for Systemd
-if [ ! -f "$HOME/.systemd.env" ]
-then
-    echo "PATH='$PATH'" > "$HOME/.systemd.env"
+if [ ! -f "$HOME/.systemd.env" ]; then
+  echo "PATH='$PATH'" > "$HOME/.systemd.env"
 else
   if [ "$(ps -C systemd -o pid= | head -n1)" -eq 1 ]; then
     set -a

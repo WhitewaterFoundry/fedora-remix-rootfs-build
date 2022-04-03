@@ -86,6 +86,6 @@ sudo curl -L -f "${base_url}/linux_files/start-systemd.sudoers" -o /etc/sudoers.
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sh" -o /usr/local/bin/start-systemd
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
 sudo chmod u+x /usr/local/bin/start-systemd
-sudo chmod u+x /usr/local/bin/wslsystemctl
+sudo chmod +x /usr/local/bin/wslsystemctl
 
 echo -n -e '\033]9;4;0;100\033\\'
