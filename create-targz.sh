@@ -58,8 +58,8 @@ function build() {
   cp "${ORIGINDIR}"/linux_files/local.conf "${TMPDIR}"/dist/etc/fonts/
   cp "${ORIGINDIR}"/linux_files/00-remix.sh "${TMPDIR}"/dist/etc/profile.d/
   cp "${ORIGINDIR}"/linux_files/00-remix.fish "${TMPDIR}"/dist/etc/fish/conf.d/
-  chmod -x "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
-  chmod -x "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish
+  chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
+  chmod -x,+r "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish
 
   cp "${ORIGINDIR}"/linux_files/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
@@ -127,7 +127,8 @@ EOF
 echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
 chmod -w /usr/bin/check-dnf
 chmod u+x /usr/bin/check-dnf
-chmod -x /etc/fish/conf.d/check-dnf.fish
+chmod -x,+r /etc/fish/conf.d/check-dnf.fish
+chmod -x,+r /etc/profile.d/check-dnf.sh
 EOF
 
   echo "##[section] 'Install MESA"

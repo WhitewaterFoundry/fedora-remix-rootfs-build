@@ -85,3 +85,15 @@ if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
   unset win_home_lnk
 
 fi
+
+# Fix $PATH for Systemd
+SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
+
+if [ -z "$SYSTEMD_PID" ] && [ ! -f "$HOME/.systemd.env" ]; then
+  echo "PATH='$PATH'" > "$HOME/.systemd.env"
+elif [ "$SYSTEMD_PID" -eq 1 ]; then
+  set -a
+  . "$HOME/.systemd.env"
+  set +a
+  rm -f "$HOME/.systemd.env"
+fi
