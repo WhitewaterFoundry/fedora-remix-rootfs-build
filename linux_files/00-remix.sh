@@ -95,7 +95,7 @@ SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
 if [ -z "$SYSTEMD_PID" ] && [ ! -f "$HOME/.systemd.env" ]; then
   echo "PATH='$PATH'" > "$HOME/.systemd.env"
-elif [ "$SYSTEMD_PID" -eq 1 ]; then
+elif [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
   set -a
   . "$HOME/.systemd.env"
   set +a
