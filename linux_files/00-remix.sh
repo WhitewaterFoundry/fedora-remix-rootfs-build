@@ -7,6 +7,12 @@ fi
 
 setup_display() {
   if [ -n "${XRDP_SESSION}" ]; then
+    if [ -f "$HOME/.systemd.env" ]; then	
+      set -a
+      . "$HOME/.systemd.env"
+      set +a
+    fi
+
     return
   fi
   
@@ -95,6 +101,9 @@ SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
 if [ -z "$SYSTEMD_PID" ]; then
   echo "PATH='$PATH'" > "$HOME/.systemd.env"
+  echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'" >> "$HOME/.systemd.env"
+  echo "WSL_INTEROP='$WSL_INTEROP'" >> "$HOME/.systemd.env"
+  echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'" >> "$HOME/.systemd.env"
 elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
   set -a
   . "$HOME/.systemd.env"
