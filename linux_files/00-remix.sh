@@ -93,11 +93,10 @@ fi
 # Fix $PATH for Systemd
 SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
-if [ -z "$SYSTEMD_PID" ] && [ ! -f "$HOME/.systemd.env" ]; then
+if [ -z "$SYSTEMD_PID" ]; then
   echo "PATH='$PATH'" > "$HOME/.systemd.env"
 elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
   set -a
   . "$HOME/.systemd.env"
   set +a
-  rm -f "$HOME/.systemd.env"
 fi
