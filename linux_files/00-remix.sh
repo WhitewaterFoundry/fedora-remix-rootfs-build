@@ -6,6 +6,16 @@ if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
 fi
 
 setup_display() {
+  if [ -n "${XRDP_SESSION}" ]; then
+    if [ -f "$HOME/.systemd.env" ]; then	
+      set -a
+      . "$HOME/.systemd.env"
+      set +a
+    fi
+
+    return
+  fi
+  
   # check whether it is WSL1 or WSL2
   if [ -n "${WSL_INTEROP}" ]; then
     if [ -n "${DISPLAY}" ]; then
@@ -19,7 +29,7 @@ setup_display() {
     # enable external x display for WSL 2
 
     ipconfig_exec=$(wslpath "C:\\Windows\\System32\\ipconfig.exe")
-    if (command -v ipconfig.exe &>/dev/null); then
+    if (command -v ipconfig.exe >/dev/null 2>&1); then
       ipconfig_exec=$(command -v ipconfig.exe)
     fi
 
@@ -62,7 +72,7 @@ alias clear='clear -x'
 alias ll='ls -al'
 
 # Check if we have Windows Path
-if (command -v cmd.exe >/dev/null 2>&1); then
+if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 
   # Create a symbolic link to the windows home
 
@@ -84,4 +94,18 @@ if (command -v cmd.exe >/dev/null 2>&1); then
 
   unset win_home_lnk
 
+fi
+
+# Fix $PATH for Systemd
+SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
+
+if [ -z "$SYSTEMD_PID" ]; then
+  echo "PATH='$PATH'" > "$HOME/.systemd.env"
+  echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'" >> "$HOME/.systemd.env"
+  echo "WSL_INTEROP='$WSL_INTEROP'" >> "$HOME/.systemd.env"
+  echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'" >> "$HOME/.systemd.env"
+elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
+  set -a
+  . "$HOME/.systemd.env"
+  set +a
 fi

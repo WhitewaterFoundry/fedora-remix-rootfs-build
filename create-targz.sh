@@ -7,7 +7,9 @@ TMPDIR=${2:-$(mktemp -d -p "${HOME}")}
 ARCH=""
 ARCHDIR=""
 
-source linux_files/os-release-34
+mkdir -p "${TMPDIR}"
+
+source linux_files/os-release-35
 
 function build() {
   echo "##[section] Install dependencies"
@@ -56,31 +58,38 @@ function build() {
   cp "${ORIGINDIR}"/linux_files/local.conf "${TMPDIR}"/dist/etc/fonts/
   cp "${ORIGINDIR}"/linux_files/00-remix.sh "${TMPDIR}"/dist/etc/profile.d/
   cp "${ORIGINDIR}"/linux_files/00-remix.fish "${TMPDIR}"/dist/etc/fish/conf.d/
-  chmod -x "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
-  chmod -x "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish
+  chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
+  chmod -x,+r "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish
 
   cp "${ORIGINDIR}"/linux_files/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
+  ln -s /usr/local/bin/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/update.sh
+
+  cp "${ORIGINDIR}"/linux_files/start-systemd.sudoers "${TMPDIR}"/dist/etc/sudoers.d/start-systemd
+  cp "${ORIGINDIR}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
+
+  cp "${ORIGINDIR}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
 
   echo "##[section] Comply with Fedora Remix terms"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y update
-dnf -y remove fedora-release-identity-basic
 dnf -y install generic-release --allowerasing  --releasever="${VERSION_ID}"
-dnf -y install audit setup fedora-repos-modular shadow-utils
+dnf -y reinstall fedora-repos-modular fedora-repos
 EOF
 
   echo "##[section] Overwrite os-release provided by generic-release"
   cp "${ORIGINDIR}"/linux_files/os-release-"${VERSION_ID}" "${TMPDIR}"/dist/etc/os-release
 
   echo "##[section] Install cracklibs-dicts"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn --resolv-conf="replace-host" -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install --allowerasing --skip-broken cracklib-dicts
 EOF
 
   echo "##[section] Install bash-completion, vim, wget"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-dnf -y install bash-completion vim wget distribution-gpg-keys
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+dnf -y install bash-completion vim wget distribution-gpg-keys rsync
 
 echo 'source /etc/vimrc' > /etc/skel/.vimrc
 echo 'set background=dark' >> /etc/skel/.vimrc
@@ -94,53 +103,47 @@ echo 'set show-all-if-unmodified on' >> /etc/skel/.inputrc
 EOF
 
   echo "##[section] Fix ping"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 chmod u+s "$(command -v ping)"
 EOF
 
-  echo "##[section] Downgrade iproute and lock"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-dnf -y install 'dnf-command(versionlock)'
-dnf -y install iproute-5.8.0
-dnf versionlock add iproute
-EOF
-
   echo "##[section] Reinstall crypto-policies and clean up"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
 dnf -y autoremove
 dnf -y clean all
 EOF
 
-  echo "##[section] 'Setup WSLU"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-(
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-\${VERSION_ID}-${ARCH}"
-)
-dnf -y install wslu
-EOF
-
   echo "##[section] 'Setup Whitewater Foundry repo"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=33 bash
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=35 bash
 EOF
 
   echo "##[section] 'Install fix for WSL1 and gpgcheck"
   cp "${ORIGINDIR}"/linux_files/check-dnf.sh "${TMPDIR}"/dist/etc/profile.d
   cp "${ORIGINDIR}"/linux_files/check-dnf.fish "${TMPDIR}"/dist/etc/fish/conf.d/
   cp "${ORIGINDIR}"/linux_files/check-dnf "${TMPDIR}"/dist/usr/bin
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
 chmod -w /usr/bin/check-dnf
 chmod u+x /usr/bin/check-dnf
-chmod -x "/etc/fish/conf.d/check-dnf.fish
+chmod -x,+r /etc/fish/conf.d/check-dnf.fish
+chmod -x,+r /etc/profile.d/check-dnf.sh
 EOF
 
   echo "##[section] 'Install MESA"
-  systemd-nspawn -q -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
-dnf -y install mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
+dnf -y install mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
+EOF
+
+  echo "##[section] 'Setup WSLU"
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+(
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${VERSION_ID}-${ARCH}"
+)
+dnf -y install wslu
 EOF
 
   echo "##[section] Copy dnf.conf"

@@ -5,6 +5,6 @@ if not id -Gn | string match -rq 'adm.*wheel|wheel.*adm'
     exit
 end
 
-if [ -z {WSL2} ]
+if test -z "$WSL2"
     sudo check-dnf
 end
