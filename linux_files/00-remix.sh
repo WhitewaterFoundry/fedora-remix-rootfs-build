@@ -13,6 +13,16 @@ setup_display() {
       set +a
     fi
 
+    if [ -n "$WSL_INTEROP" ]; then
+      export WSL2=1
+
+      for i in $(pstree -np -s $$ | grep -o -E '[0-9]+'); do
+        if [ -e "/run/WSL/${i}_interop" ]; then
+          export WSL_INTEROP=/run/WSL/${i}_interop
+        fi
+      done
+    fi
+
     return
   fi
   
@@ -71,6 +81,20 @@ alias clear='clear -x'
 # Custom aliases
 alias ll='ls -al'
 
+# Fix $PATH for Systemd
+SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
+
+if [ -z "$SYSTEMD_PID" ]; then
+  echo "PATH='$PATH'" > "$HOME/.systemd.env"
+  echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'" >> "$HOME/.systemd.env"
+  echo "WSL_INTEROP='$WSL_INTEROP'" >> "$HOME/.systemd.env"
+  echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'" >> "$HOME/.systemd.env"
+elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
+  set -a
+  . "$HOME/.systemd.env"
+  set +a
+fi
+
 # Check if we have Windows Path
 if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 
@@ -94,18 +118,4 @@ if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 
   unset win_home_lnk
 
-fi
-
-# Fix $PATH for Systemd
-SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
-
-if [ -z "$SYSTEMD_PID" ]; then
-  echo "PATH='$PATH'" > "$HOME/.systemd.env"
-  echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'" >> "$HOME/.systemd.env"
-  echo "WSL_INTEROP='$WSL_INTEROP'" >> "$HOME/.systemd.env"
-  echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'" >> "$HOME/.systemd.env"
-elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
-  set -a
-  . "$HOME/.systemd.env"
-  set +a
 fi
