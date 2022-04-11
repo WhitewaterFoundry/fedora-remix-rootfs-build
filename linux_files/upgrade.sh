@@ -84,6 +84,11 @@ fi
 # Upgrade Systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sudoers" -o /etc/sudoers.d/start-systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sh" -o /usr/local/bin/start-systemd
+sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.service" -o /etc/systemd/system/wsl2-xwayland.service
+sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.socket" -o /etc/systemd/system/wsl2-xwayland.socket
+ln -sf ../wsl2-xwayland.socket /etc/systemd/system/sockets.target.wants/
+
+
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
 sudo chmod u+x /usr/local/bin/start-systemd
 sudo chmod +x /usr/local/bin/wslsystemctl
