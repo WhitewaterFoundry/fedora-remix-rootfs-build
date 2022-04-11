@@ -5,9 +5,14 @@ if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
   return
 fi
 
+setup_interop() {
+  # shellcheck disable=SC2155,SC2012
+  export WSL_INTEROP="$(ls -U /run/WSL/*_interop | tail -1)"
+}
+
 setup_display() {
   if [ -n "${XRDP_SESSION}" ]; then
-    if [ -f "$HOME/.systemd.env" ]; then	
+    if [ -f "$HOME/.systemd.env" ]; then
       set -a
       . "$HOME/.systemd.env"
       set +a
@@ -16,16 +21,12 @@ setup_display() {
     if [ -n "$WSL_INTEROP" ]; then
       export WSL2=1
 
-      for i in $(pstree -np -s $$ | grep -o -E '[0-9]+'); do
-        if [ -e "/run/WSL/${i}_interop" ]; then
-          export WSL_INTEROP=/run/WSL/${i}_interop
-        fi
-      done
+      setup_interop
     fi
 
     return
   fi
-  
+
   # check whether it is WSL1 or WSL2
   if [ -n "${WSL_INTEROP}" ]; then
     if [ -n "${DISPLAY}" ]; then
@@ -85,14 +86,20 @@ alias ll='ls -al'
 SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
 if [ -z "$SYSTEMD_PID" ]; then
-  echo "PATH='$PATH'" > "$HOME/.systemd.env"
-  echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'" >> "$HOME/.systemd.env"
-  echo "WSL_INTEROP='$WSL_INTEROP'" >> "$HOME/.systemd.env"
-  echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'" >> "$HOME/.systemd.env"
+
+  {
+    echo "PATH='$PATH'"
+    echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'"
+    echo "WSL_INTEROP='$WSL_INTEROP'"
+    echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
+  } > "$HOME/.systemd.env"
+
 elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
   set -a
   . "$HOME/.systemd.env"
   set +a
+
+  setup_interop
 fi
 
 # Check if we have Windows Path
@@ -109,7 +116,7 @@ if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
   fi
 
   # shellcheck disable=SC2155
-  export WIN_HOME=$(wslpath -u "${wHomeWinPath}")
+  export WIN_HOME="$(wslpath -u "${wHomeWinPath}")"
 
   win_home_lnk=${HOME}/winhome
   if [ ! -e "${win_home_lnk}" ]; then
