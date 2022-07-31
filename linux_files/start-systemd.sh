@@ -47,6 +47,6 @@ if [ -z "$SYSTEMD_PID" ] || [ "$SYSTEMD_PID" -ne 1 ]; then
 	echo "Systemd is ready."
 
 	exec /usr/bin/nsenter --mount --pid --target "$SYSTEMD_PID" -- su \
-	  --whitelist-environment="WSL_INTEROP,WSL_DISTRO_NAME,WIN_HOME,DISPLAY" \
+	  --whitelist-environment="WSL_INTEROP,WSL_DISTRO_NAME,WIN_HOME,DISPLAY,PULSE_SERVER" \
 	  --login "$SUDO_USER"
 fi

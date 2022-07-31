@@ -92,6 +92,7 @@ if [ -z "$SYSTEMD_PID" ]; then
     echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'"
     echo "WSL_INTEROP='$WSL_INTEROP'"
     echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
+    echo "PULSE_SERVER='$PULSE_SERVER'"
   } > "$HOME/.systemd.env"
 
 elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
