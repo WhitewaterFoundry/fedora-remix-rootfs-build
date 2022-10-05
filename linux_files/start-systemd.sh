@@ -44,7 +44,7 @@ if [ -z "$SYSTEMD_PID" ] || [ "$SYSTEMD_PID" -ne 1 ]; then
     sleep 1
     WAITMSG="$($IS_SYSTEMD_READY_CMD 2>&1)"
   done
-  echo "Systemd is ready."
+  [[ -f ~/.hushlogin ]] || echo "Systemd is ready."
 
   exec /usr/bin/nsenter --mount --pid --target "$SYSTEMD_PID" -- su \
     --whitelist-environment="WSL_INTEROP,WSL_DISTRO_NAME,WIN_HOME,DISPLAY,PULSE_SERVER" \
