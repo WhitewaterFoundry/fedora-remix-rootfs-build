@@ -1,4 +1,5 @@
 #!/bin/bash
+# bashsupport disable=BP5004
 
 echo "##[section] Set environment"
 set -e
@@ -10,7 +11,7 @@ ARCHDIR=""
 
 mkdir -p "${TMPDIR}"
 
-source linux_files/os-release-36
+source linux_files/os-release-37
 
 function build() {
   echo "##[section] Install dependencies"
