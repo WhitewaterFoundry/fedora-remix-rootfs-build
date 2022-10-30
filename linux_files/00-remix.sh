@@ -1,9 +1,22 @@
 #!/bin/sh
+# bashsupport disable=BP5007
 
 # Only the default WSL user should run this script
 if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
   return
 fi
+
+systemd_saved_environment="$HOME/.systemd.env"
+
+save_environment() {
+  {
+    echo "PATH='$PATH'"
+    echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'"
+    echo "WSL_INTEROP='$WSL_INTEROP'"
+    echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
+    echo "PULSE_SERVER='$PULSE_SERVER'"
+  } >"${systemd_saved_environment}"
+}
 
 setup_interop() {
   # shellcheck disable=SC2155,SC2012
@@ -12,13 +25,14 @@ setup_interop() {
 
 setup_display() {
   if [ -n "${XRDP_SESSION}" ]; then
-    if [ -f "$HOME/.systemd.env" ]; then
+    if [ -f "${systemd_saved_environment}" ]; then
       set -a
-      . "$HOME/.systemd.env"
+      # shellcheck disable=SC1090
+      . "${systemd_saved_environment}"
       set +a
     fi
 
-    if [ -n "$WSL_INTEROP" ]; then
+    if [ -n "${WSL_INTEROP}" ]; then
       export WSL2=1
 
       setup_interop
@@ -27,10 +41,14 @@ setup_display() {
     return
   fi
 
+  if [ -n "${SSH_CONNECTION}" ]; then
+    return
+  fi
+
   # check whether it is WSL1 or WSL2
   if [ -n "${WSL_INTEROP}" ]; then
     if [ -n "${DISPLAY}" ]; then
-      #Export an enviroment variable for helping other processes
+      #Export an environment variable for helping other processes
       export WSL2=1
 
       return
@@ -81,23 +99,21 @@ alias clear='clear -x'
 
 # Custom aliases
 alias ll='ls -al'
+alias winget='powershell.exe winget'
+alias wsl='wsl.exe'
+
 
 # Fix $PATH for Systemd
 SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
 if [ -z "$SYSTEMD_PID" ]; then
 
-  {
-    echo "PATH='$PATH'"
-    echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'"
-    echo "WSL_INTEROP='$WSL_INTEROP'"
-    echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
-    echo "PULSE_SERVER='$PULSE_SERVER'"
-  } > "$HOME/.systemd.env"
+  save_environment
 
 elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
   set -a
-  . "$HOME/.systemd.env"
+  # shellcheck disable=SC1090
+  . "${systemd_saved_environment}"
   set +a
 
   setup_interop
