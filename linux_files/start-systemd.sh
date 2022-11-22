@@ -109,9 +109,9 @@ function main() {
     } >"${sudo_user_home}/${systemd_environment}"
     chown "${SUDO_USER}:${SUDO_USER}" "${sudo_user_home}/${systemd_environment}"
 
-    exec /usr/bin/nsenter --mount --pid --target "${systemd_pid}" -- sudo -u "${SUDO_USER}" /bin/sh -c "set -a; . '${sudo_user_home}/${systemd_environment}'; set +a; cd; bash --login"
+    exec /usr/bin/nsenter --mount --pid --target "${systemd_pid}" -- sudo -u "${SUDO_USER}" /bin/sh -c "set -a; . '${sudo_user_home}/${systemd_environment}'; set +a; cd; $(getent passwd "${SUDO_USER}" | cut -d: -f7) --login"
   else
-    exec sudo -u "${SUDO_USER}" /bin/sh -c "cd; bash --login"
+    exec sudo -u "${SUDO_USER}" /bin/sh -c "cd; $(getent passwd "${SUDO_USER}" | cut -d: -f7) --login"
   fi
 }
 
