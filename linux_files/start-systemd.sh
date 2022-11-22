@@ -1,52 +1,118 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-if [ -z "${WSL_INTEROP}" ]; then
+#######################################
+# Rebuilds the interop with Windows executables
+# Globals:
+#   WSL_INTEROP
+# Arguments:
+#  None
+#######################################
+function setup_interop() {
+  # shellcheck disable=SC2155,SC2012
+  # bashsupport disable=BP5006
+  export WSL_INTEROP="$(ls -U /run/WSL/*_interop | tail -1)"
+}
+
+#######################################
+#
+# Globals:
+#   HOME
+#   PATH
+#   PENGWIN_COMMAND
+#   PENGWIN_REMOTE_DESKTOP
+#   PULSE_SERVER
+#   SUDO_USER
+#   WSL_DISTRO_NAME
+#   WSL_INTEROP
+#   WSL_SYSTEMD_EXECUTION_ARGS
+#   is_systemd_ready_cmd
+#   sudo_user_home
+#   systemd_exe
+#   systemd_pid
+#   wait_msg
+# Arguments:
+#  None
+#######################################
+function main() {
+  if [ -z "${WSL_INTEROP}" ]; then
     echo "Error: start-systemd requires WSL 2."
     echo " -> Try upgrading your distribution to WSL 2."
     echo "Alternatively you can try wslsystemctl which provides basic functionality for WSL 1."
     echo " -> sudo wslsystemctl start <my-service-name>"
+    echo
+    echo "Press Enter to exit..."
+    read -r
     exit 0
-fi
+  fi
 
-SYSTEMD_EXE="$(command -v systemd)"
+  # shellcheck disable=SC2155
+  local systemd_exe="$(command -v systemd)"
 
-if [ -z "$SYSTEMD_EXE" ]; then
-	if [ -x "/usr/lib/systemd/systemd" ]; then
-		SYSTEMD_EXE="/usr/lib/systemd/systemd"
-	else
-		SYSTEMD_EXE="/lib/systemd/systemd"
-	fi
-fi
+  if [ -z "${systemd_exe}" ]; then
+    if [ -x "/usr/lib/systemd/systemd" ]; then
+      systemd_exe="/usr/lib/systemd/systemd"
+    else
+      systemd_exe="/lib/systemd/systemd"
+    fi
+  fi
 
-SYSTEMD_EXE="$SYSTEMD_EXE --unit=multi-user.target" # snapd requires multi-user.target not basic.target
-SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
+  systemd_exe="${systemd_exe} --unit=multi-user.target" # snapd requires multi-user.target not basic.target
 
-if [ -z "$SYSTEMD_PID" ] || [ "$SYSTEMD_PID" -ne 1 ]; then
+  # shellcheck disable=SC2155
+  local systemd_pid="$(ps -C systemd -o pid= | head -n1)"
+  # bashsupport disable=BP2001
+  readonly systemd_environment=".systemd.env"
+  # shellcheck disable=SC2155
+  # bashsupport disable=BP2001
+  export sudo_user_home="$(getent passwd "${SUDO_USER}" | cut -d: -f6)"
 
-	if [ -z "$SYSTEMD_PID" ]; then
-		env -i /usr/bin/unshare --fork --mount-proc --pid --propagation shared -- sh -c "
-			mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
-			exec $SYSTEMD_EXE
-			" &
-		while [ -z "$SYSTEMD_PID" ]; do
-			SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
-			sleep 1
-		done
-	fi
+  if [ -z "${systemd_pid}" ] || [ "${systemd_pid}" -ne 1 ]; then
 
-	IS_SYSTEMD_READY_CMD="/usr/bin/nsenter --mount --pid --target $SYSTEMD_PID -- systemctl is-system-running"
-	WAITMSG="$($IS_SYSTEMD_READY_CMD 2>&1)"
-	if [ "$WAITMSG" = "initializing" ] || [ "$WAITMSG" = "starting" ] || [ "$WAITMSG" = "Failed to connect to bus: No such file or directory" ]; then
-		echo "Waiting for systemd to finish booting"
-	fi
-	while [ "$WAITMSG" = "initializing" ] || [ "$WAITMSG" = "starting" ] || [ "$WAITMSG" = "Failed to connect to bus: No such file or directory" ]; do
-		echo -n "."
-		sleep 1
-		WAITMSG="$($IS_SYSTEMD_READY_CMD 2>&1)"
-	done
-	echo "Systemd is ready."
+    if [ -f "${sudo_user_home}/${systemd_environment}" ]; then
+      set -a
+      # shellcheck disable=SC1090
+      . "${sudo_user_home}/${systemd_environment}"
+      set +a
 
-	exec /usr/bin/nsenter --mount --pid --target "$SYSTEMD_PID" -- su \
-	  --whitelist-environment="WSL_INTEROP,WSL_DISTRO_NAME,WIN_HOME,DISPLAY" \
-	  --login "$SUDO_USER"
-fi
+      setup_interop
+    fi
+
+    if [ -z "${systemd_pid}" ]; then
+      env -i /usr/bin/unshare --fork --mount-proc --pid --propagation shared -- sh -c "
+      mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
+      exec ${systemd_exe}
+      " &
+      while [ -z "${systemd_pid}" ]; do
+        systemd_pid="$(ps -C systemd -o pid= | head -n1)"
+        sleep 1
+      done
+    fi
+
+    local is_systemd_ready_cmd="/usr/bin/nsenter --mount --pid --target ${systemd_pid} -- systemctl is-system-running"
+    # shellcheck disable=SC2155
+    local wait_msg="$(${is_systemd_ready_cmd} 2>&1)"
+    if [ "${wait_msg}" = "initializing" ] || [ "${wait_msg}" = "starting" ] || [ "${wait_msg}" = "Failed to connect to bus: No such file or directory" ]; then
+      echo "Waiting for systemd to finish booting"
+    fi
+    while [ "${wait_msg}" = "initializing" ] || [ "${wait_msg}" = "starting" ] || [ "${wait_msg}" = "Failed to connect to bus: No such file or directory" ]; do
+      echo -n "."
+      sleep 1
+      wait_msg="$(${is_systemd_ready_cmd} 2>&1)"
+    done
+
+    {
+      echo "PATH='${PATH}'"
+      echo "WSL_DISTRO_NAME='${WSL_DISTRO_NAME}'"
+      echo "WSL_INTEROP='${WSL_INTEROP}'"
+      echo "WSL_SYSTEMD_EXECUTION_ARGS='${WSL_SYSTEMD_EXECUTION_ARGS}'"
+      echo "PULSE_SERVER='${PULSE_SERVER}'"
+    } >"${sudo_user_home}/${systemd_environment}"
+    chown "${SUDO_USER}:${SUDO_USER}" "${sudo_user_home}/${systemd_environment}"
+
+    exec /usr/bin/nsenter --mount --pid --target "${systemd_pid}" -- sudo -u "${SUDO_USER}" /bin/sh -c "set -a; . '${sudo_user_home}/${systemd_environment}'; set +a; cd; bash --login"
+  else
+    exec sudo -u "${SUDO_USER}" /bin/sh -c "cd; bash --login"
+  fi
+}
+
+main "$@"

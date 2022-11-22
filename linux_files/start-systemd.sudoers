@@ -3,4 +3,5 @@ Defaults env_keep += WSL_INTEROP
 Defaults env_keep += WSL_SYSTEMD_EXECUTION_ARGS
 Defaults env_keep += DISPLAY
 Defaults env_keep += HOME
+Defaults env_keep += PULSE_SERVER
 %wheel ALL=NOPASSWD: /usr/local/bin/start-systemd
