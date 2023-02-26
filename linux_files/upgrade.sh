@@ -50,18 +50,18 @@ if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 34 && $( sudo dnf info --instal
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
 
-if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 35 && $( sudo dnf info --installed mesa-libGL | grep -c '22.3.6-wsl' ) == 0 ]]; then
-  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
-  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=37 bash
-  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-22.3.6-wsl mesa-libGL-22.3.6-wsl mesa-va-drivers-22.3.6-wsl mesa-vdpau-drivers-22.3.6-wsl glx-utils vdpauinfo libva-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
-fi
-
-if [[ ${VERSION_ID} -eq 35 && $( sudo dnf info --installed mesa-libGL | grep -c '21.2.3-wsl' ) == 0 ]]; then
+if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 35 && $( sudo dnf info --installed mesa-libGL | grep -c '21.2.3-wsl' ) == 0 ]]; then
   sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
   curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=35 bash
   sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
+fi
+
+if [[ ${VERSION_ID} -eq 37 && $( sudo dnf info --installed mesa-libGL | grep -c '22.3.6-wsl' ) == 0 ]]; then
+  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
+  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=37 bash
+  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-22.3.6-wsl mesa-libGL-22.3.6-wsl mesa-va-drivers-22.3.6-wsl mesa-vdpau-drivers-22.3.6-wsl glx-utils vdpauinfo libva-utils
+  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
 fi
 
 if [[ $(sudo dnf -y copr list | grep -c "trustywolf/wslu") == 1 ]]; then
