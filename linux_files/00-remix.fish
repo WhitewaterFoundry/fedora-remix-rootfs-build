@@ -52,6 +52,10 @@ set --export NO_AT_BRIDGE 1
 # Fix 'clear' scrolling issues
 alias clear='clear -x'
 
+# Setup video acceleration
+set --export VDPAU_DRIVER d3d12
+set --export LIBVA_DRIVER_NAME d3d12
+
 # Check if we have Windows Path
 if command -q cmd.exe
 
