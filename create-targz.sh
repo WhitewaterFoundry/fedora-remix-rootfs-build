@@ -108,11 +108,6 @@ echo 'set show-all-if-ambiguous on' >> /etc/skel/.inputrc
 echo 'set show-all-if-unmodified on' >> /etc/skel/.inputrc
 EOF
 
-  echo "##[section] Fix ping"
-  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-chmod u+s "$(command -v ping)"
-EOF
-
   echo "##[section] Reinstall crypto-policies and clean up"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y reinstall crypto-policies --exclude=grub\*,dracut*,grubby,kpartx,kmod,os-prober,libkcapi*
@@ -151,6 +146,12 @@ EOF
 )
 dnf -y install wslu
 EOF
+
+  echo "##[section] Fix ping"
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+chmod u+s "$(command -v ping)"
+EOF
+
 
   echo "##[section] Copy dnf.conf"
   cp "${ORIGINDIR}"/linux_files/dnf.conf "${TMPDIR}"/dist/etc/dnf/dnf.conf
