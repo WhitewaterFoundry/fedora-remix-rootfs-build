@@ -64,6 +64,12 @@ if [[ ${VERSION_ID} -eq 37 && $( sudo dnf info --installed mesa-libGL | grep -c 
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
 fi
 
+if [[ $(id | grep -c video) == 0 ]]; then
+  sudo /usr/sbin/groupadd -g 44 wsl-video
+  sudo /usr/sbin/usermod -aG wsl-video "$(whoami)"
+  sudo /usr/sbin/usermod -aG video "$(whoami)"
+fi
+
 if [[ $(sudo dnf -y copr list | grep -c "trustywolf/wslu") == 1 ]]; then
   (
     source /etc/os-release
