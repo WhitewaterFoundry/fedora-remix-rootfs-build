@@ -135,7 +135,7 @@ EOF
   echo "##[section] 'Install MESA"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
-dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl mesa-libGL-23.0.2-wsl mesa-va-drivers-23.0.2-wsl mesa-vdpau-drivers-23.0.2-wsl glx-utils vdpauinfo libva-utils
+dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_2 mesa-libGL-23.0.2-wsl_2 mesa-va-drivers-23.0.2-wsl_2 mesa-vdpau-drivers-23.0.2-wsl_2 glx-utils vdpauinfo libva-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
 
 /usr/sbin/groupadd -g 44 wsl-video

@@ -57,10 +57,10 @@ if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 35 && $( sudo dnf info --instal
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
 
-if [[ ${VERSION_ID} -eq 37 && $( sudo dnf info --installed mesa-libGL | grep -c '23.0.2-wsl' ) == 0 ]]; then
+if [[ ${VERSION_ID} -eq 37 && $( sudo dnf info --installed mesa-libGL | grep -c '23.0.2-wsl_2' ) == 0 ]]; then
   sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
   curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=37 bash
-  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl mesa-libGL-23.0.2-wsl mesa-va-drivers-23.0.2-wsl mesa-vdpau-drivers-23.0.2-wsl glx-utils vdpauinfo libva-utils
+  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_2 mesa-libGL-23.0.2-wsl_2 mesa-va-drivers-23.0.2-wsl_2 mesa-vdpau-drivers-23.0.2-wsl_2 glx-utils vdpauinfo libva-utils
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
 fi
 
