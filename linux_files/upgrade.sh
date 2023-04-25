@@ -61,14 +61,14 @@ if [[ ${VERSION_ID} -eq 37 && $( sudo dnf info --installed mesa-libGL | grep -c 
   sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
   curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=37 bash
   sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_2 mesa-libGL-23.0.2-wsl_2 mesa-va-drivers-23.0.2-wsl_2 mesa-vdpau-drivers-23.0.2-wsl_2 mesa-libEGL-23.0.2-wsl_2 mesa-libgbm-23.0.2-wsl_2 mesa-libxatracker-23.0.2-wsl_2 mesa-vulkan-drivers-23.0.2-wsl_2 glx-utils vdpauinfo libva-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
+  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
 fi
 
 if [[ ${VERSION_ID} -eq 38 && $( sudo dnf info --installed mesa-libGL | grep -c '23.0.2-wsl_3' ) == 0 ]]; then
   sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
   curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=38 bash
   sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_3 mesa-libGL-23.0.2-wsl_3 mesa-va-drivers-23.0.2-wsl_3 mesa-vdpau-drivers-23.0.2-wsl_3 mesa-libEGL-23.0.2-wsl_3 mesa-libgbm-23.0.2-wsl_3 mesa-libxatracker-23.0.2-wsl_3 mesa-vulkan-drivers-23.0.2-wsl_3 glx-utils vdpauinfo libva-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers
+  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
 fi
 
 if [[ $(id | grep -c video) == 0 ]]; then
