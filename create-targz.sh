@@ -118,6 +118,7 @@ EOF
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=37 bash
+dnf update --refresh
 EOF
 
   echo "##[section] 'Install fix for WSL1 and gpgcheck"
