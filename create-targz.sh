@@ -207,8 +207,8 @@ function main() {
 
   mkdir -p "${TMPDIR}"
 
-  version_id=${3:-37}
-  # shellcheck source=linux_files/os-release-37
+  version_id=${3:-38}
+  # shellcheck source=linux_files/os-release-38
   source "linux_files/os-release-${version_id}"
 
   # Accept argument input for architecture type
