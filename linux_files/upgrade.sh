@@ -3,8 +3,8 @@
 echo -n -e '\033]9;4;3;100\033\\'
 
 base_url="https://raw.githubusercontent.com/WhitewaterFoundry/fedora-remix-rootfs-build/master"
-#sudo curl -L -f "${base_url}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
-#sudo chmod +x /usr/local/bin/upgrade.sh
+sudo curl -L -f "${base_url}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
+sudo chmod +x /usr/local/bin/upgrade.sh
 
 
 # Do not change above this line to avoid update errors
