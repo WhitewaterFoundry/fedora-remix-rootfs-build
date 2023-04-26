@@ -3,8 +3,9 @@
 echo -n -e '\033]9;4;3;100\033\\'
 
 base_url="https://raw.githubusercontent.com/WhitewaterFoundry/fedora-remix-rootfs-build/master"
-sudo curl -L -f "${base_url}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
-sudo chmod +x /usr/local/bin/upgrade.sh
+#sudo curl -L -f "${base_url}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
+#sudo chmod +x /usr/local/bin/upgrade.sh
+
 
 # Do not change above this line to avoid update errors
 
@@ -43,33 +44,28 @@ sudo curl -L -f "${base_url}/linux_files/local.conf" -o /etc/fonts/local.conf
 
 # Install mesa
 source /etc/os-release
-if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 34 && $( sudo dnf info --installed mesa-libGL | grep -c '21.0.2-wsl' ) == 0 ]]; then
-  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
-  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=34 bash
-  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-21.0.2-wsl.fc34.x86_64 mesa-libGL-21.0.2-wsl.fc34.x86_64 glx-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
-fi
 
-if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 35 && $( sudo dnf info --installed mesa-libGL | grep -c '21.2.3-wsl' ) == 0 ]]; then
+if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 36 && $( sudo dnf info --installed mesa-libGL | grep -c '21.2.3-wsl' ) == 0 ]]; then
   sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
-  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=35 bash
+  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
   sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
   sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
 fi
 
-if [[ ${VERSION_ID} -eq 37 && $( sudo dnf info --installed mesa-libGL | grep -c '23.0.2-wsl_2' ) == 0 ]]; then
-  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
-  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=37 bash
-  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_2 mesa-libGL-23.0.2-wsl_2 mesa-va-drivers-23.0.2-wsl_2 mesa-vdpau-drivers-23.0.2-wsl_2 mesa-libEGL-23.0.2-wsl_2 mesa-libgbm-23.0.2-wsl_2 mesa-libxatracker-23.0.2-wsl_2 mesa-vulkan-drivers-23.0.2-wsl_2 glx-utils vdpauinfo libva-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
-fi
+declare -a mesa_version=('23.0.2-wsl_2' '23.0.2-wsl_3')
+declare -a target_version=('37' '38')
+declare -i length=${#mesa_version[@]}
 
-if [[ ${VERSION_ID} -eq 38 && $( sudo dnf info --installed mesa-libGL | grep -c '23.0.2-wsl_3' ) == 0 ]]; then
-  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
-  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist=38 bash
-  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_3 mesa-libGL-23.0.2-wsl_3 mesa-va-drivers-23.0.2-wsl_3 mesa-vdpau-drivers-23.0.2-wsl_3 mesa-libEGL-23.0.2-wsl_3 mesa-libgbm-23.0.2-wsl_3 mesa-libxatracker-23.0.2-wsl_3 mesa-vulkan-drivers-23.0.2-wsl_3 glx-utils vdpauinfo libva-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
-fi
+for (( i = 0; i < length; i++ )); do
+
+  if [[ ${VERSION_ID} -eq ${target_version[i]} && $( sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}" ) == 0 ]]; then
+
+    sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
+    curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
+    sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
+    sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
+  fi
+done
 
 if [[ $(id | grep -c video) == 0 ]]; then
   sudo /usr/sbin/groupadd -g 44 wsl-video
