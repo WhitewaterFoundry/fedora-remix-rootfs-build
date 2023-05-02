@@ -57,7 +57,7 @@ set --export VDPAU_DRIVER d3d12
 set --export LIBVA_DRIVER_NAME d3d12
 
 # Check if we have Windows Path
-if command -q cmd.exe and status --is-login
+if command -q cmd.exe; and status --is-login
 
     # Create a symbolic link to the windows home
 
