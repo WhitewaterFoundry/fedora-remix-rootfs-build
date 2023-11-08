@@ -45,7 +45,7 @@ jobs:
       mkdir rootfs
     displayName: 'Creating rootfs folder'
 
-  - script: sudo bash create-targz.sh $(ARCH) "$PWD/rootfs" 38
+  - script: sudo bash create-targz.sh $(ARCH) "$PWD/rootfs" 39
     displayName: 'Build image'
 
   - script: |
