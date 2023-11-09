@@ -148,8 +148,7 @@ EOF
 (
   source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-38-${arch}"
 )
-sudo sed -i "s/\$releasever/38/g" /etc/yum.repos.d/_copr\:copr.fedorainfracloud.org\:
-wslutilities\:wslu.repo
+sudo sed -i "s/\$releasever/38/g" /etc/yum.repos.d/_copr\:copr.fedorainfracloud.org\:wslutilities\:wslu.repo
 dnf -y install wslu
 EOF
 
