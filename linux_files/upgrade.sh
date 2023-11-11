@@ -18,8 +18,8 @@ sudo rm -f /var/lib/rpm/.rpm.lock
 sudo dnf -y update --nogpgcheck
 sudo rm -f /var/lib/rpm/.rpm.lock
 
-# WSLU 3 is not installed
-if [[ "$(wslsys -v | grep -c "v3\.")" -eq 0 ]]; then
+# WSLU 4 is not installed
+if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]]; then
   (
     source /etc/os-release && sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
   )
@@ -45,8 +45,8 @@ sudo curl -L -f "${base_url}/linux_files/local.conf" -o /etc/fonts/local.conf
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('23.0.2-wsl_2' '23.1.9-wsl')
-declare -a target_version=('37' '38')
+declare -a mesa_version=('23.0.2-wsl_2' '23.1.9-wsl' '23.1.9-wsl')
+declare -a target_version=('37' '38' '39')
 declare -i length=${#mesa_version[@]}
 
 for (( i = 0; i < length; i++ )); do

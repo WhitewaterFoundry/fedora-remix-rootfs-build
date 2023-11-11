@@ -136,7 +136,7 @@ EOF
   echo "##[section] 'Install MESA"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
-dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.0.2-wsl_3 mesa-libGL-23.0.2-wsl_3 mesa-va-drivers-23.0.2-wsl_3 mesa-vdpau-drivers-23.0.2-wsl_3 mesa-libEGL-23.0.2-wsl_3 mesa-libgbm-23.0.2-wsl_3 mesa-libxatracker-23.0.2-wsl_3 mesa-vulkan-drivers-23.0.2-wsl_3 glx-utils vdpauinfo libva-utils
+dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-23.1.9-wsl mesa-libGL-23.1.9-wsl mesa-va-drivers-23.1.9-wsl mesa-vdpau-drivers-23.1.9-wsl mesa-libEGL-23.1.9-wsl mesa-libgbm-23.1.9-wsl mesa-libxatracker-23.1.9-wsl mesa-vulkan-drivers-23.1.9-wsl glx-utils vdpauinfo libva-utils
 dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
 
 /usr/sbin/groupadd -g 44 wsl-video
@@ -146,9 +146,9 @@ EOF
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-38-${arch}"
+  #source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-38-${arch}"
 )
-sudo sed -i "s/\$releasever/38/g" /etc/yum.repos.d/_copr\:copr.fedorainfracloud.org\:wslutilities\:wslu.repo
+#sudo sed -i "s/\$releasever/38/g" /etc/yum.repos.d/_copr\:copr.fedorainfracloud.org\:wslutilities\:wslu.repo
 dnf -y install wslu
 EOF
 
