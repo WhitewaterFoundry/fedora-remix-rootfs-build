@@ -45,14 +45,7 @@ sudo curl -L -f "${base_url}/linux_files/local.conf" -o /etc/fonts/local.conf
 # Install mesa
 source /etc/os-release
 
-if [[ -n ${WAYLAND_DISPLAY} && ${VERSION_ID} -eq 36 && $( sudo dnf info --installed mesa-libGL | grep -c '21.2.3-wsl' ) == 0 ]]; then
-  sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
-  curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
-  sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-21.2.3-wsl.fc35 mesa-libGL-21.2.3-wsl.fc35 glx-utils
-  sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi
-fi
-
-declare -a mesa_version=('23.0.2-wsl_2' '23.0.2-wsl_3')
+declare -a mesa_version=('23.0.2-wsl_2' '23.1.9-wsl')
 declare -a target_version=('37' '38')
 declare -i length=${#mesa_version[@]}
 
