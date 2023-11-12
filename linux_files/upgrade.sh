@@ -50,6 +50,9 @@ declare -a target_version=('37' '38' '39')
 declare -i length=${#mesa_version[@]}
 
 for (( i = 0; i < length; i++ )); do
+  if [[ ${VERSION_ID} -eq '39' ]]; then
+    VERSION_ID='38'
+  fi
 
   if [[ ${VERSION_ID} -eq ${target_version[i]} && $( sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}" ) == 0 ]]; then
 
