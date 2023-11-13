@@ -93,7 +93,7 @@ fi
 
 # speed up some GUI apps like gedit
 export NO_AT_BRIDGE=1
-export PS1='\[\033]133;D;$?\]\[\033\\\033]133;A\033\\\]\[\e[${PROMPT_COLOR:-32}m\]\u@\h\[\e[0m\]:\[\e[${PROMPT_COLOR:-32}m\]\w\[\e[0;31m\]${?#0}\[\e[0m\]\$ \[\033]133;B\033\\\]'
+export PS1='\[\033]133;D;$?\]\[\033\\\033]133;A\033\\\]\[\e[${PROMPT_COLOR:-32}m\]\u@\h\[\e[0m\]:\[\e[${PROMPT_COLOR:-32}m\]\w\[\033]9;9;"$(wslpath -w "${PWD}")"\033\\\]\[\e[0;31m\]${?#0}\[\e[0m\]\$ \[\033]133;B\033\\\]'
 
 # Fix 'clear' scrolling issues
 alias clear='clear -x'
