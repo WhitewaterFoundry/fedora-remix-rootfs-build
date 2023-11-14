@@ -4,11 +4,11 @@
 [ "$(grep -c "^systemd.*" /etc/wsl.conf)" -eq 0 ] && echo -e "\n[boot]\nsystemd=true\n" | sudo tee -a /etc/wsl.conf
 [ "$(grep -c "^systemd.*=.*true$" /etc/wsl.conf)" -eq 0 ] && sudo sed -i "s/^systemd.*=.*false$/systemd=true/" /etc/wsl.conf
 
-[ "$(grep -c "^hostname.*" /etc/wsl.conf)" -eq 0 ] && sudo sed '/\[network\]/s/.*/&\nhostname=fedoraremix/' /etc/wsl.conf
+[ "$(grep -c "^hostname.*" /etc/wsl.conf)" -eq 0 ] && sudo sed -i '/\[network\]/s/.*/&\nhostname=fedoraremix/' /etc/wsl.conf
 
 update.sh
 
-sudo dnf -y group install 'GNOME'
+#sudo dnf -y group install 'GNOME'
 
 sudo localectl set-locale LANG="en_US.UTF-8"
 
