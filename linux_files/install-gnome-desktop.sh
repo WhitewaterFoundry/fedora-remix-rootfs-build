@@ -8,12 +8,14 @@
 
 update.sh
 
-#sudo dnf -y group install 'GNOME'
+sudo dnf -y group install 'GNOME'
 
 sudo localectl set-locale LANG="en_US.UTF-8"
 
-sudo dnf -y install xrdp
+sudo dnf -y install xrdp avahi
 sudo systemctl enable xrdp
+sudo systemctl enable avahi-daemon
+
 sudo sed -i "s/port=3389/port=3396/" /etc/xrdp/xrdp.ini
 sudo sed -i "s/ListenPort=3350/ListenPort=3346/" /etc/xrdp/sesman.ini
 
