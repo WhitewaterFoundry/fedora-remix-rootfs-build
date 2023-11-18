@@ -68,7 +68,7 @@ function build() {
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
   ln -s /usr/local/bin/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/update.sh
 
-  cp "${origin_dir}"/linux_files/install-desktop.sh -o "${TMPDIR}"/dist/usr/local/bin/install-desktop.sh
+  cp "${origin_dir}"/linux_files/install-desktop.sh "${TMPDIR}"/dist/usr/local/bin/install-desktop.sh
   chmod +x "${TMPDIR}"/dist/usr/local/bin/install-desktop.sh
 
   cp "${origin_dir}"/linux_files/start-systemd.sudoers "${TMPDIR}"/dist/etc/sudoers.d/start-systemd
