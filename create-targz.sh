@@ -36,7 +36,7 @@ function build() {
   mount --bind /dev "${TMPDIR}"/dist/dev
 
   echo "##[section] Install required packages, exclude unnecessary packages to reduce image size"
-  dnf --installroot="${TMPDIR}"/dist --forcearch="${arch}" --releasever="${version_id}" -y install @core libgcc glibc-langpack-en --exclude=grub\*,sssd-kcm,sssd-common,sssd-client,linux-firmware,dracut*,plymouth,parted,e2fsprogs,iprutils,iptables,ppc64-utils,selinux-policy*,policycoreutils,sendmail,kernel*,firewalld,fedora-release,fedora-logos,fedora-release-notes --allowerasing
+  dnf --installroot="${TMPDIR}"/dist --forcearch="${arch}" --releasever="${version_id}" -y install @core libgcc glibc-langpack-en bash-color-prompt --exclude=grub\*,sssd-kcm,sssd-common,sssd-client,linux-firmware,dracut*,plymouth,parted,e2fsprogs,iprutils,iptables,ppc64-utils,selinux-policy*,policycoreutils,sendmail,kernel*,firewalld,fedora-release,fedora-logos,fedora-release-notes --allowerasing
 
   echo "##[section] Unmount /dev"
   umount "${TMPDIR}"/dist/dev
@@ -59,6 +59,7 @@ function build() {
   cp "${origin_dir}"/linux_files/wsl.conf "${TMPDIR}"/dist/etc/
   cp "${origin_dir}"/linux_files/local.conf "${TMPDIR}"/dist/etc/fonts/
   cp "${origin_dir}"/linux_files/00-remix.sh "${TMPDIR}"/dist/etc/profile.d/
+  cp "${origin_dir}"/linux_files/bash-prompt-wsl.sh "${TMPDIR}"/dist/etc/profile.d/
   cp "${origin_dir}"/linux_files/00-remix.fish "${TMPDIR}"/dist/etc/fish/conf.d/
   chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
   chmod -x,+r "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish

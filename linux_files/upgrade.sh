@@ -37,7 +37,12 @@ sudo chmod -x,+r /etc/profile.d/00-remix.sh
 (
   source /etc/os-release
   sudo curl -L -f "${base_url}/linux_files/os-release-${VERSION_ID}" -o /etc/os-release
+
+  if [[ ${VERSION_ID} -eq '39' && ! -f /etc/profile.d/bash-color-prompt.sh ]]; then
+    sudo dnf -y install --nogpgcheck bash-color-prompt
+  fi
 )
+sudo curl -L -f "${base_url}/linux_files/bash-prompt-wsl.sh" -o /etc/profile.d/bash-prompt-wsl.sh
 
 # Add local.conf to fonts
 sudo curl -L -f "${base_url}/linux_files/local.conf" -o /etc/fonts/local.conf
