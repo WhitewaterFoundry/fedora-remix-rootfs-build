@@ -75,9 +75,9 @@ function build() {
   cp "${origin_dir}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
- cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
- cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
- ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
+  cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
+  cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
+  ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
 
   cp "${origin_dir}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
   chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
@@ -121,7 +121,7 @@ EOF
 
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=38 bash
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=${version_id} bash
 dnf update --refresh
 EOF
 
@@ -149,10 +149,9 @@ EOF
 
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-#(
-  #source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-38-${arch}"
-#)
-#sudo sed -i "s/\$releasever/38/g" /etc/yum.repos.d/_copr\:copr.fedorainfracloud.org\:wslutilities\:wslu.repo
+(
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${version_id}-${arch}"
+)
 dnf -y install wslu
 EOF
 

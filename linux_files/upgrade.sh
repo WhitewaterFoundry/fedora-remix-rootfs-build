@@ -59,10 +59,6 @@ declare -a target_version=('37' '38' '39')
 declare -i length=${#mesa_version[@]}
 
 for (( i = 0; i < length; i++ )); do
-  if [[ ${VERSION_ID} -eq '39' ]]; then
-    VERSION_ID='38'
-  fi
-
   if [[ ${VERSION_ID} -eq ${target_version[i]} && $( sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}" ) == 0 ]]; then
 
     sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
@@ -78,10 +74,9 @@ if [[ $(id | grep -c video) == 0 ]]; then
   sudo /usr/sbin/usermod -aG video "$(whoami)"
 fi
 
-if [[ $(sudo dnf -y copr list | grep -c "trustywolf/wslu") == 1 ]]; then
+if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 0 ]]; then
   (
     source /etc/os-release
-    sudo dnf -y copr remove trustywolf/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
     sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
   )
 fi
