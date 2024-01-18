@@ -3,19 +3,28 @@ trigger:
 
 stages:
 - stage: amd64
-  jobs:
-  - template: debootstrap_architecture_template.yml
-    parameters:
-      arch: x86_64
-      agent_arch: X64
-      arch_dir: x64
-      aws_instance_id:  i-072a16dc951b04894
-- stage: arm64
   dependsOn: []
   jobs:
     - template: debootstrap_architecture_template.yml
       parameters:
-        arch: arm64
-        agent_arch: ARM64
-        arch_dir: ARM64
+        arch: x86_64
+        agent_arch: X64
+        arch_dir: x64
         aws_instance_id: i-069e94572a8a70572
+#- stage: arm64
+#  dependsOn: []
+#  jobs:
+#    - template: debootstrap_architecture_template.yml
+#      parameters:
+#        arch: arm64
+#        agent_arch: ARM64
+#        arch_dir: ARM64
+#        aws_instance_id: i-069e94572a8a70572
+
+#  jobs:
+#    - template: debootstrap_architecture_template.yml
+#      parameters:
+#        arch: x86_64
+#        agent_arch: X64
+#        arch_dir: x64
+#        aws_instance_id:  i-072a16dc951b04894
