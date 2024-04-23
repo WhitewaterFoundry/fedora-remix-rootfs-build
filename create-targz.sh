@@ -121,7 +121,7 @@ EOF
 
   echo "##[section] 'Setup Whitewater Foundry repo"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=${version_id} bash
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | env os=fedora dist=39 bash
 dnf update --refresh
 EOF
 
@@ -150,7 +150,7 @@ EOF
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-${version_id}-${arch}"
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-39-${arch}"
 )
 dnf -y install wslu
 EOF
@@ -212,7 +212,7 @@ function main() {
 
   mkdir -p "${TMPDIR}"
 
-  version_id=${3:-39}
+  version_id=${3:-40}
   # shellcheck source=linux_files/os-release-39
   source "linux_files/os-release-${version_id}"
 
