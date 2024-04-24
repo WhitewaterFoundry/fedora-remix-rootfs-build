@@ -54,15 +54,11 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('23.0.2-wsl_2' '23.1.9-wsl' '23.1.9-wsl')
-declare -a target_version=('37' '38' '39')
+declare -a mesa_version=('23.1.9-wsl' '23.1.9-wsl' '24.0.5-wsl')
+declare -a target_version=('38' '39' '40')
 declare -i length=${#mesa_version[@]}
 
 for (( i = 0; i < length; i++ )); do
-  if [[ ${VERSION_ID} -eq '40' ]]; then
-    VERSION_ID='39'
-  fi
-
   if [[ ${VERSION_ID} -eq ${target_version[i]} && $( sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}" ) == 0 ]]; then
 
     sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
