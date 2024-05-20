@@ -87,12 +87,35 @@ setup_display() {
   fi
 }
 
-setup_display
+setup_dbus() {
+  # if dbus-launch is installed then load it
+  if ! (command -v dbus-launch >/dev/null); then
+    return
+  fi
 
-# if dbus-launch is installed then load it
-if (command -v dbus-launch >/dev/null 2>&1); then
-  eval "$(timeout 2s dbus-launch --auto-syntax)"
-fi
+  # Enabled via systemd
+  if [ -n "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+    return
+  fi
+
+  dbus_pid="$(pidof dbus-daemon | cut -d' ' -f1)"
+
+  if [ -z "${dbus_pid}" ]; then
+    dbus_env="$(timeout 2s dbus-launch --auto-syntax)"
+    eval "${dbus_env}"
+
+    echo "${dbus_env}" >"/tmp/dbus_env_${DBUS_SESSION_BUS_PID}"
+
+    unset dbus_env
+  else # Running from a previous session
+    eval "$(cat "/tmp/dbus_env_${dbus_pid}")"
+  fi
+
+  unset dbus_pid
+}
+
+setup_display
+setup_dbus
 
 # speed up some GUI apps like gedit
 export NO_AT_BRIDGE=1
