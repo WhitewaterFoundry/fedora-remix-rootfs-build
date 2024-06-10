@@ -6,5 +6,4 @@ function main() {
   export PS1='\[\033]133;D;$?\]\[\033\\\033]133;A\033\\\]'"${PS1}"'\[\033]9;9;"$(wslpath -w "${PWD}")"\033\\\]\[\033]133;B\033\\\]'
 }
 
-# Disabled until the bug in Windows Terminal 1.21 get fixed
-#main "$@"
+main "$@"
