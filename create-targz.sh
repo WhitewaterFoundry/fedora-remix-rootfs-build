@@ -158,6 +158,7 @@ EOF
   echo "##[section] Fix ping"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 chmod u+s "$(command -v ping)"
+setcap cap_net_raw+ep "$(command -v ping)"
 EOF
 
   echo "##[section] Copy dnf.conf"
