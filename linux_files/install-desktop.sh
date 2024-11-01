@@ -60,6 +60,13 @@ fi
 
 echo "${desktop_choice}"
 
+declare -A desktop_group
+
+desktop_group["GNOME"]="gnome-desktop"
+desktop_group["KDE"]="kde-desktop"
+desktop_group["Xfce"]="xfce-desktop"
+desktop_group["LXDE"]="lxde-desktop"
+
 sudo dnf -y group install "${desktop_choice}"
 
 declare -A desktop_execs
