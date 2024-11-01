@@ -67,7 +67,8 @@ desktop_group["KDE"]="kde-desktop"
 desktop_group["Xfce"]="xfce-desktop"
 desktop_group["LXDE"]="lxde-desktop"
 
-sudo dnf -y group install "${desktop_choice}"
+group_to_install=${desktop_group[${desktop_choice}]}
+sudo dnf -y group install "${group_to_install}"
 
 declare -A desktop_execs
 
