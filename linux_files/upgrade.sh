@@ -54,7 +54,7 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('23.1.9-wsl' '24.1.2-7_wsl.fc40' '24.2.5-1_wsl.fc41')
+declare -a mesa_version=('23.1.9-wsl' '24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41')
 declare -a target_version=('39' '40' '41')
 declare -i length=${#mesa_version[@]}
 
