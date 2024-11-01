@@ -28,8 +28,8 @@ function build() {
   echo "##[section] Make sure /dev is created before later mount"
   mkdir -m 0755 "${TMPDIR}"/dist/dev
 
-  echo "##[section] Use mock to initialise chroot filesystem"
-  mock --root="fedora-${version_id}-${arch}" --init --dnf --forcearch="${arch}" --rootdir="${TMPDIR}"/dist
+  echo "##[section] Use mock to initialie chroot filesystem"
+  mock --root="fedora-${version_id}-${arch}" --init --yum --forcearch="${arch}" --rootdir="${TMPDIR}"/dist
 
   echo "##[section] Bind mount current /dev to new chroot/dev"
   # (fixes '/dev/null: Permission denied' errors)
