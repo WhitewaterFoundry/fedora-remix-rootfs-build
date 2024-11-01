@@ -141,7 +141,7 @@ EOF
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
 
-declare -a mesa_version=('23.1.9-wsl' '24.1.2-7_wsl.fc40' '24.2.5-1_wsl.fc40')
+declare -a mesa_version=('23.1.9-wsl' '24.1.2-7_wsl.fc40' '24.2.5-1_wsl.fc41')
 declare -a target_version=('39' '40' '41')
 declare -i length=${#mesa_version[@]}
 
