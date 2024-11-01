@@ -70,6 +70,10 @@ desktop_group["LXDE"]="lxde-desktop"
 group_to_install=${desktop_group[${desktop_choice}]}
 sudo dnf -y group install "${group_to_install}"
 
+if [[ ${desktop_choice} == "KDE" ]]; then
+  sudo dnf -y install plasma-workspace-x11
+fi
+
 declare -A desktop_execs
 
 desktop_execs["GNOME"]="gnome-session"
