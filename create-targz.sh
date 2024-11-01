@@ -28,8 +28,8 @@ function build() {
   echo "##[section] Make sure /dev is created before later mount"
   mkdir -m 0755 "${TMPDIR}"/dist/dev
 
-  echo "##[section] Use mock to initialie chroot filesystem"
-  mock --root="fedora-${version_id}-${arch}" --init --yum --forcearch="${arch}" --rootdir="${TMPDIR}"/dist
+  echo "##[section] Use mock to initialize chroot filesystem"
+  mock --root="fedora-${version_id}-${arch}" --init --forcearch="${arch}" --rootdir="${TMPDIR}"/dist
 
   echo "##[section] Bind mount current /dev to new chroot/dev"
   # (fixes '/dev/null: Permission denied' errors)
@@ -86,7 +86,7 @@ function build() {
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y update
 dnf -y install generic-release --allowerasing  --releasever="${version_id}"
-dnf -y reinstall fedora-repos-modular fedora-repos
+dnf -y reinstall --skip-unavailable fedora-repos-modular fedora-repos
 EOF
 
   echo "##[section] Overwrite os-release provided by generic-release"
