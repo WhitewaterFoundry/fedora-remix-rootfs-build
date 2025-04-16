@@ -213,11 +213,11 @@ function main() {
 
   mkdir -p "${TMPDIR}"
 
-  version_id=${3:-40}
+  version_id=${3:-42}
   # shellcheck source=linux_files/os-release-39
   source "linux_files/os-release-${version_id}"
 
-  # Accept argument input for architecture type
+  # Accept argument input for the architecture type
   arch="$1"
 
   if [ "$arch" = "x86_64" ]; then
