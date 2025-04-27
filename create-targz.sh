@@ -79,7 +79,7 @@ function build() {
   cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/etc/oobe.sh
   chmod +x "${build_dir}"/etc/oobe.sh
 
-  mkdir -p "${build_dir}"/usr/lib/wsl
+  mkdir -p "${TMPDIR}"/dist/usr/lib/wsl
   cp "${origin_dir}"/linux_files/fedoraremix.ico "${TMPDIR}"/dist/usr/lib/wsl/fedoraremix.ico
   cp "${origin_dir}"/linux_files/terminal-profile.json "${TMPDIR}"/dist/usr/lib/wsl/terminal-profile.json
 
