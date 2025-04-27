@@ -82,6 +82,9 @@ function build() {
   cp "${origin_dir}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
   chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
 
+  cp "${origin_dir}"/linux_files/journalctl3.py "${TMPDIR}"/dist/usr/local/bin/wsljournalctl
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/wsljournalctl
+
   echo "##[section] Comply with Fedora Remix terms"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y update
