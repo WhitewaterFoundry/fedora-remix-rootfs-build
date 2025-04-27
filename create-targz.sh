@@ -76,7 +76,7 @@ function build() {
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
   cp "${origin_dir}"/linux_files/wsl-distribution.conf "${TMPDIR}"/dist/etc/wsl-distribution.conf
-  cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/etc/oobe.sh
+  cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
   chmod +x "${build_dir}"/etc/oobe.sh
 
   mkdir -p "${TMPDIR}"/dist/usr/lib/wsl
