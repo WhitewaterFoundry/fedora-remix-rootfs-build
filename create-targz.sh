@@ -150,7 +150,7 @@ EOF
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 (
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-40-${arch}"
+  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-41-${arch}"
 )
 dnf -y install wslu
 EOF
