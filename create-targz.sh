@@ -75,9 +75,9 @@ function build() {
   cp "${origin_dir}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
-  cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
-  cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
-  ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
+  #cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
+  #cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
+  #ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
 
   cp "${origin_dir}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
   chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
