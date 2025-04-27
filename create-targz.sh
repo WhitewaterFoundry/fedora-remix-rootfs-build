@@ -76,11 +76,11 @@ function build() {
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
   cp "${origin_dir}"/linux_files/wsl-distribution.conf "${TMPDIR}"/dist/etc/wsl-distribution.conf
-  cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
-  chmod +x "${build_dir}"/etc/oobe.sh
-
+  
   mkdir -p "${TMPDIR}"/dist/usr/lib/wsl
-  cp "${origin_dir}"/linux_files/fedoraremix.ico "${TMPDIR}"/dist/usr/lib/wsl/fedoraremix.ico
+  cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
+  chmod +x "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
+cp "${origin_dir}"/linux_files/fedoraremix.ico "${TMPDIR}"/dist/usr/lib/wsl/fedoraremix.ico
   cp "${origin_dir}"/linux_files/terminal-profile.json "${TMPDIR}"/dist/usr/lib/wsl/terminal-profile.json
 
   #cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
