@@ -178,7 +178,7 @@ EOF
   echo "##[section] Create filesystem tar, excluding unnecessary files"
   cd "${TMPDIR}"/dist
   mkdir -p "${origin_dir}"/"${arch_dir}"
-  tar --exclude='boot/*' --exclude=proc --exclude=dev --exclude=sys --exclude='var/cache/dnf/*' --numeric-owner -czf "${origin_dir}"/"${arch_dir}"/install.tar.gz ./*
+  tar --exclude='boot/*' --exclude=proc --exclude=dev --exclude=sys --exclude='var/cache/dnf/*' --absolute-names --numeric-owner -c * | gzip --best >  "${origin_dir}"/"${arch_dir}"/install.tar.gz
 
   echo "##[section] Return to origin directory"
   cd "${origin_dir}"
