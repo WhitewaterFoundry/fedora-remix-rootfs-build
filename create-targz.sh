@@ -75,13 +75,13 @@ function build() {
   cp "${origin_dir}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
-  cp "${origin_dir}"/linux_files/wsl-distribution.conf "${build_dir}"/etc/wsl-distribution.conf
-  cp "${origin_dir}"/linux_files/oobe.sh "${build_dir}"/etc/oobe.sh
+  cp "${origin_dir}"/linux_files/wsl-distribution.conf "${TMPDIR}"/etc/wsl-distribution.conf
+  cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/etc/oobe.sh
   chmod +x "${build_dir}"/etc/oobe.sh
 
   mkdir -p "${build_dir}"/usr/lib/wsl
-  cp "${origin_dir}"/linux_files/fedoraremix.ico "${build_dir}"/usr/lib/wsl/fedoraremix.ico
-  cp "${origin_dir}"/linux_files/terminal-profile.json "${build_dir}"/usr/lib/wsl/terminal-profile.json
+  cp "${origin_dir}"/linux_files/fedoraremix.ico "${TMPDIR}"/usr/lib/wsl/fedoraremix.ico
+  cp "${origin_dir}"/linux_files/terminal-profile.json "${TMPDIR}"/usr/lib/wsl/terminal-profile.json
 
   #cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
   #cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
