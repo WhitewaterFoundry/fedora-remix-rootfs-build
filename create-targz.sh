@@ -87,9 +87,9 @@ function build() {
   #cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
   #ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
 
-  cp "${origin_dir}"/linux_files/wsl-links.conf "${TMPDIR}"/dist/lib/tmpfiles.d/
-  mkdir -p "${TMPDIR}"/dist/share/user-tmpfiles.d
-  cp "${origin_dir}"/linux_files/wsl-links-user.conf "${TMPDIR}"/dist/share/user-tmpfiles.d/
+  cp "${origin_dir}"/linux_files/wsl-links.conf "${TMPDIR}"/dist/usr/lib/tmpfiles.d/
+  mkdir -p "${TMPDIR}"/dist/usr/share/user-tmpfiles.d
+  cp "${origin_dir}"/linux_files/wsl-links-user.conf "${TMPDIR}"/dist/usr/share/user-tmpfiles.d/
 
   cp "${origin_dir}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
   chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
