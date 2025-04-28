@@ -110,7 +110,7 @@ EOF
 
   echo "##[section] Install typical Linux utils"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-dnf -y install bash-completion vim wget distribution-gpg-keys rsync util-linux-user nano
+dnf -y install bash-completion vim wget distribution-gpg-keys rsync util-linux-user nano dbus-tools dos2unix
 
 echo 'source /etc/vimrc' > /etc/skel/.vimrc
 echo 'set background=dark' >> /etc/skel/.vimrc
