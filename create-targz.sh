@@ -80,12 +80,15 @@ function build() {
   mkdir -p "${TMPDIR}"/dist/usr/lib/wsl
   cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
   chmod +x "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
-cp "${origin_dir}"/linux_files/fedoraremix.ico "${TMPDIR}"/dist/usr/lib/wsl/fedoraremix.ico
+  cp "${origin_dir}"/linux_files/fedoraremix.ico "${TMPDIR}"/dist/usr/lib/wsl/fedoraremix.ico
   cp "${origin_dir}"/linux_files/terminal-profile.json "${TMPDIR}"/dist/usr/lib/wsl/terminal-profile.json
 
   #cp "${origin_dir}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
   #cp "${origin_dir}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
   #ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
+
+  cp "${origin_dir}"/linux_files/wsl-links.conf "${TMPDIR}"/dist/lib/tmpfiles.d/
+  cp "${origin_dir}"/linux_files/wsl-links-user.conf "${TMPDIR}"/dist/share/user-tmpfiles.d/
 
   cp "${origin_dir}"/linux_files/systemctl3.py "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
   chmod +x "${TMPDIR}"/dist/usr/local/bin/wslsystemctl
