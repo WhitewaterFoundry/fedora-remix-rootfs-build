@@ -54,7 +54,7 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.2-3_wsl_1.fc42')
+declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_1.fc42')
 declare -a target_version=('40' '41' '42')
 declare -i length=${#mesa_version[@]}
 
@@ -94,11 +94,10 @@ fi
 # Upgrade Systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sudoers" -o /etc/sudoers.d/start-systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sh" -o /usr/local/bin/start-systemd
-#sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.service" -o /etc/systemd/system/wsl2-xwayland.service
-#sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.socket" -o /etc/systemd/system/wsl2-xwayland.socket
-#sudo mkdir -p /etc/systemd/system/sockets.target.wants
-#sudo ln -sf ../wsl2-xwayland.socket /etc/systemd/system/sockets.target.wants/
-
+sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.service" -o /etc/systemd/system/wsl2-xwayland.service
+sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.socket" -o /etc/systemd/system/wsl2-xwayland.socket
+sudo mkdir -p /etc/systemd/system/sockets.target.wants
+sudo ln -sf ../wsl2-xwayland.socket /etc/systemd/system/sockets.target.wants/
 
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
 sudo curl -L -f "${base_url}/linux_files/journalctl3.py" -o /usr/local/bin/wsljournalctl

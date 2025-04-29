@@ -94,4 +94,26 @@ sudo systemctl enable avahi-daemon
 sudo sed -i "s/port=3389/port=${port}/" /etc/xrdp/xrdp.ini
 sudo sed -i "s/ListenPort=3350/ListenPort=${listen_port}/" /etc/xrdp/sesman.ini
 
+# List of services to check and mask
+services=(
+  "systemd-resolved.service"
+  "systemd-networkd.service"
+  "NetworkManager.service"
+  "systemd-tmpfiles-setup.service"
+  "systemd-tmpfiles-clean.service"
+  "systemd-tmpfiles-clean.timer"
+  "systemd-tmpfiles-setup-dev-early.service"
+  "systemd-tmpfiles-setup-dev.service"
+  "tmp.mount"
+)
+
+for service in "${services[@]}"; do
+  if systemctl is-enabled "$service" &>/dev/null; then
+    echo "Masking $service..."
+    sudo systemctl mask "$service"
+  else
+    echo "$service is not enabled."
+  fi
+done
+
 wsl.exe --terminate "${WSL_DISTRO_NAME}"
