@@ -140,24 +140,13 @@ curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedorarem
 dnf update --refresh
 EOF
 
-  echo "##[section] 'Install fix for WSL1 and gpgcheck"
-  cp "${origin_dir}"/linux_files/check-dnf.sh "${TMPDIR}"/dist/etc/profile.d
-  cp "${origin_dir}"/linux_files/check-dnf.fish "${TMPDIR}"/dist/etc/fish/conf.d/
-  cp "${origin_dir}"/linux_files/check-dnf "${TMPDIR}"/dist/usr/bin
-  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
-chmod -w /usr/bin/check-dnf
-chmod u+x /usr/bin/check-dnf
-chmod -x,+r /etc/fish/conf.d/check-dnf.fish
-chmod -x,+r /etc/profile.d/check-dnf.sh
-EOF
-
   echo "##[section] 'Install MESA"
-  declare -a mesa_version=('23.1.9-wsl' '24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.2-3_wsl_1.fc42')
-  local i=3
+  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.2-3_wsl_1.fc42')
+  local i=${#mesa_version[@]}
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
 dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
+dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
 
 /usr/sbin/groupadd -g 44 wsl-video
 EOF

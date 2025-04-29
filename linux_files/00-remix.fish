@@ -52,9 +52,14 @@ set --export NO_AT_BRIDGE 1
 # Fix 'clear' scrolling issues
 alias clear='clear -x'
 
-# Setup video acceleration
-set --export VDPAU_DRIVER d3d12
-set --export LIBVA_DRIVER_NAME d3d12
+if set -q WSL2
+    # Setup video acceleration
+    set -x VDPAU_DRIVER d3d12
+    set -x LIBVA_DRIVER_NAME d3d12
+
+    # Setup Gallium Direct3D 12 driver
+    set -x GALLIUM_DRIVER d3d12
+end
 
 # Check if we have Windows Path
 if command -q cmd.exe; and status --is-login

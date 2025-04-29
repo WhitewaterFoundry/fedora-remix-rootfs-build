@@ -54,8 +54,8 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('23.1.9-wsl' '24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.2-3_wsl_1.fc42')
-declare -a target_version=('39' '40' '41' '42')
+declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.2-3_wsl_1.fc42')
+declare -a target_version=('40' '41' '42')
 declare -i length=${#mesa_version[@]}
 
 for (( i = 0; i < length; i++ )); do
@@ -78,41 +78,32 @@ if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 0 ]]; then
   (
     source /etc/os-release
 
-    if [[ ${VERSION_ID} -gt 40 ]]; then
-      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-40-"$(uname -m)"
+    if [[ ${VERSION_ID} -gt 41 ]]; then
+      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-41-"$(uname -m)"
     else
       sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
     fi
   )
 fi
 
-if [[ -z ${WSL2} ]]; then
-  gpgcheck_enabled=$(sudo dnf config-manager --dump '*' | grep -c "gpgcheck = 1")
-
-  if [[ ${gpgcheck_enabled} -gt 0 ]]; then
-    sudo curl -L -f "${base_url}/linux_files/check-dnf.sh" -o /etc/profile.d/check-dnf.sh
-    sudo curl -L -f "${base_url}/linux_files/check-dnf.fish" -o /etc/fish/conf.d/check-dnf.fish
-    sudo curl -L -f "${base_url}/linux_files/check-dnf" -o /usr/bin/check-dnf
-    echo '%wheel   ALL=NOPASSWD: /usr/bin/check-dnf' | sudo EDITOR='tee -a' visudo --quiet --file=/etc/sudoers.d/check-dnf
-    sudo chmod -w /usr/bin/check-dnf
-    sudo chmod u+x /usr/bin/check-dnf
-    sudo chmod -x,+r /etc/profile.d/check-dnf.sh
-
-    sudo check-dnf
-  fi
+if [[ -f "/etc/profile.d/check-dnf.sh" ]]; then
+  sudo rm /etc/profile.d/check-dnf.sh
+  sudo rm /etc/fish/conf.d/check-dnf.fish
 fi
 
 # Upgrade Systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sudoers" -o /etc/sudoers.d/start-systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sh" -o /usr/local/bin/start-systemd
-sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.service" -o /etc/systemd/system/wsl2-xwayland.service
-sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.socket" -o /etc/systemd/system/wsl2-xwayland.socket
-sudo mkdir -p /etc/systemd/system/sockets.target.wants
-sudo ln -sf ../wsl2-xwayland.socket /etc/systemd/system/sockets.target.wants/
+#sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.service" -o /etc/systemd/system/wsl2-xwayland.service
+#sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.socket" -o /etc/systemd/system/wsl2-xwayland.socket
+#sudo mkdir -p /etc/systemd/system/sockets.target.wants
+#sudo ln -sf ../wsl2-xwayland.socket /etc/systemd/system/sockets.target.wants/
 
 
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
+sudo curl -L -f "${base_url}/linux_files/journalctl3.py" -o /usr/local/bin/wsljournalctl
 sudo chmod u+x /usr/local/bin/start-systemd
 sudo chmod +x /usr/local/bin/wslsystemctl
+sudo chmod +x /usr/local/bin/wsljournalctl
 
 echo -n -e '\033]9;4;0;100\033\\'
