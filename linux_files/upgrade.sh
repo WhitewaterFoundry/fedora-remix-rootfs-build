@@ -99,6 +99,17 @@ sudo curl -L -f "${base_url}/linux_files/wsl2-xwayland.socket" -o /etc/systemd/s
 sudo mkdir -p /etc/systemd/system/sockets.target.wants
 sudo ln -sf ../wsl2-xwayland.socket /etc/systemd/system/sockets.target.wants/
 
+# Mask conficting services
+sudo ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
+sudo ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
+sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service
+sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service
+sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service
+sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer
+sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service
+sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service
+sudo ln -sf /dev/null /etc/systemd/system/tmp.mount
+
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
 sudo curl -L -f "${base_url}/linux_files/journalctl3.py" -o /usr/local/bin/wsljournalctl
 sudo chmod u+x /usr/local/bin/start-systemd

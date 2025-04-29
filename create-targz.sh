@@ -97,6 +97,19 @@ function build() {
   cp "${origin_dir}"/linux_files/journalctl3.py "${TMPDIR}"/dist/usr/local/bin/wsljournalctl
   chmod +x "${TMPDIR}"/dist/usr/local/bin/wsljournalctl
 
+  echo "##[section] Masking conflicting services"
+  systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
+ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
+ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
+ln -sf /dev/null /etc/systemd/system/NetworkManager.service
+ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service
+ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service
+ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer
+ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service
+ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service
+ln -sf /dev/null /etc/systemd/system/tmp.mount
+EOF
+
   echo "##[section] Comply with Fedora Remix terms"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y update
