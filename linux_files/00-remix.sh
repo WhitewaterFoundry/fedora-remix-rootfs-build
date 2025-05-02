@@ -61,9 +61,9 @@ setup_display() {
       if [ -n "${WSL2_GUI_APPS_ENABLED}" ]; then
         local uid="$(id -u)"
         
-        ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/${ui}/
-        ln -fs /mnt/wslg/runtime-dir/wayland-0.lock /run/user/${ui}/
-        ln -fs /mnt/wslg/runtime-dir/pulse /run/user/${ui}/pulse
+        ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/${uid}/
+        ln -fs /mnt/wslg/runtime-dir/wayland-0.lock /run/user/${uid}/
+        ln -fs /mnt/wslg/runtime-dir/pulse /run/user/${uid}/pulse
       fi
     
       return
