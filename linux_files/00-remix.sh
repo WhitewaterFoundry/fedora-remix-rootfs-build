@@ -39,7 +39,7 @@ setup_display() {
     fi
 
     unset WAYLAND_DISPLAY
-    rm -f /mnt/wslg/runtime-dir/wayland*
+    rm -f /run/user/$(id -u)/wayland*
 
     return
   fi
