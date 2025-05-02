@@ -15,6 +15,7 @@ save_environment() {
     echo "WSL_INTEROP='$WSL_INTEROP'"
     echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
     echo "PULSE_SERVER='$PULSE_SERVER'"
+    echo "WSL2_GUI_APPS_ENABLED='$WSL2_GUI_APPS_ENABLED'"
   } >"${systemd_saved_environment}"
 }
 
@@ -38,9 +39,11 @@ setup_display() {
       setup_interop
     fi
 
-    unset WAYLAND_DISPLAY
-    rm -f /run/user/$(id -u)/wayland*
-
+    if [ -n "${WSL2_GUI_APPS_ENABLED}" ]; then
+      unset WAYLAND_DISPLAY
+      rm -f /run/user/$(id -u)/wayland*
+    fi
+    
     return
   fi
 
@@ -50,16 +53,23 @@ setup_display() {
 
   # check whether it is WSL1 or WSL2
   if [ -n "${WSL_INTEROP}" ]; then
-    if [ -n "${DISPLAY}" ]; then
-      #Export an environment variable for helping other processes
-      export WSL2=1
-
-      return
-    fi
     #Export an environment variable for helping other processes
     export WSL2=1
-    # enable external x display for WSL 2
+    
+    if [ -n "${DISPLAY}" ]; then
 
+      if [ -n "${WSL2_GUI_APPS_ENABLED}" ]; then
+        local uid="$(id -u)"
+        
+        ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/${ui}/
+        ln -fs /mnt/wslg/runtime-dir/wayland-0.lock /run/user/${ui}/
+        ln -fs /mnt/wslg/runtime-dir/pulse /run/user/${ui}/pulse
+      fi
+    
+      return
+    fi
+
+    # enable external x display for WSL 2
     ipconfig_exec=$(wslpath "C:\\Windows\\System32\\ipconfig.exe")
     if (command -v ipconfig.exe >/dev/null 2>&1); then
       ipconfig_exec=$(command -v ipconfig.exe)
