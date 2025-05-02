@@ -106,6 +106,7 @@ function main() {
       echo "WSL_INTEROP='${WSL_INTEROP}'"
       echo "WSL_SYSTEMD_EXECUTION_ARGS='${WSL_SYSTEMD_EXECUTION_ARGS}'"
       echo "PULSE_SERVER='${PULSE_SERVER}'"
+      echo "WAYLAND_DISPLAY='$WAYLAND_DISPLAY'"
     } >"${sudo_user_home}/${systemd_environment}"
     chown "${SUDO_USER}:${SUDO_USER}" "${sudo_user_home}/${systemd_environment}"
 
