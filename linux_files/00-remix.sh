@@ -15,7 +15,6 @@ save_environment() {
     echo "WSL_INTEROP='$WSL_INTEROP'"
     echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
     echo "PULSE_SERVER='$PULSE_SERVER'"
-    echo "WSL2_GUI_APPS_ENABLED='$WSL2_GUI_APPS_ENABLED'"
   } >"${systemd_saved_environment}"
 }
 
@@ -39,8 +38,8 @@ setup_display() {
       setup_interop
     fi
 
-    if [ -n "${WSL2_GUI_APPS_ENABLED}" ]; then
-      unset WAYLAND_DISPLAY
+    unset WAYLAND_DISPLAY
+    if [ -n "$SYSTEMD_PID" ]; then
       rm -f /run/user/$(id -u)/wayland*
     fi
     
@@ -58,7 +57,7 @@ setup_display() {
     
     if [ -n "${DISPLAY}" ]; then
 
-      if [ -n "${WSL2_GUI_APPS_ENABLED}" ]; then
+      if [ -n "$SYSTEMD_PID" ]; then
         local uid="$(id -u)"
         
         ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/${uid}/
@@ -154,7 +153,8 @@ if [ -z "$SYSTEMD_PID" ]; then
 
   save_environment
 
-elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ]; then
+elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ] && [ -n "$WSL_SYSTEMD_EXECUTION_ARGS" ]; then
+  # Only if bult-in systemd was started
   set -a
   # shellcheck disable=SC1090
   . "${systemd_saved_environment}"
