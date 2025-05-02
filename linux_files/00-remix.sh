@@ -8,6 +8,8 @@ fi
 
 systemd_saved_environment="$HOME/.systemd.env"
 
+SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
+
 save_environment() {
   {
     echo "PATH='$PATH'"
@@ -145,9 +147,6 @@ if [ -n "${WSL2}" ]; then
   # Setup Gallium Direct3D 12 driver
   export GALLIUM_DRIVER=d3d12
 fi 
-
-# Fix $PATH for Systemd
-SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
 if [ -z "$SYSTEMD_PID" ]; then
 
