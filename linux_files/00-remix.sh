@@ -17,6 +17,7 @@ save_environment() {
     echo "WSL_INTEROP='$WSL_INTEROP'"
     echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
     echo "PULSE_SERVER='$PULSE_SERVER'"
+    echo "WAYLAND_DISPLAY='$WAYLAND_DISPLAY'"
   } >"${systemd_saved_environment}"
 }
 
