@@ -104,17 +104,28 @@ function setup_display
             set ipconfig_exec (command -v ipconfig.exe)
         end
 
-        set -l gw_line (eval $ipconfig_exec 2>/dev/null | \
-                         grep -n -m1 'Default Gateway.*: [0-9a-fA-F]' | \
-                         cut -d: -f1)
+        # first, find the line number of the gateway entry
+        set -l gw_line (eval $ipconfig_exec 2>/dev/null \
+                         | grep -n -m1 'Default Gateway.*: [0-9a-fA-F]' \
+                         | cut -d: -f1)
 
         if test -n "$gw_line"
-            set -l wsl2_ip (eval $ipconfig_exec | \
-                             sed "$((gw_line - 4)),$((gw_line))!d" | \
-                             grep IPv4 | cut -d: -f2 | tr -d ' \r')
+            # compute start/end positions
+            set -l start (math $gw_line - 4)
+            set -l end   $gw_line
+
+            # now call sed using those vars
+            set -l wsl2_ip (eval $ipconfig_exec \
+                             | sed "${start},${end}!d" \
+                             | grep IPv4 \
+                             | cut -d: -f2 \
+                             | tr -d ' \r')
         else
             set -l wsl2_ip (grep -m1 nameserver /etc/resolv.conf | awk '{print $2}')
         end
+
+        # finally export DISPLAY
+        set -gx DISPLAY "$wsl2_ip:0"
         set -gx DISPLAY "$wsl2_ip:0"
         return
     end
