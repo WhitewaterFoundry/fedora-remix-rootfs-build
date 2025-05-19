@@ -179,9 +179,9 @@ end
 ### 6. Windows‐home symlink
 
 if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1
-    set -l wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' | tr -d '\r')
+    set -l wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
     if test (string length $wHomeWinPath) -le 3
-        set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' | tr -d '\r')
+        set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' 2>/dev/null | tr -d '\r')
     end
 
     set -gx WIN_HOME (wslpath -u $wHomeWinPath)
