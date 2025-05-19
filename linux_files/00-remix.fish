@@ -9,20 +9,34 @@
 set -g systemd_saved_environment "$HOME/.systemd.env"
 set -g SYSTEMD_PID (ps -C systemd -o pid= | head -n1)
 
-function load_env_file --description 'Import bash-style KEY='\''VAL'\'' lines'
+function load_env_file --description 'Import bash-style  VAR='\''VALUE'\''  lines'
     set -l file $argv[1]
-    if test -f $file
-        while read -l line
-            # Match lines like VAR='value'
-            if string match -qre '^([A-Z0-9_]+)=\'.*\'$' -- $line
-                set -l key (string split -f1 '=' $line)
-                set -l val (string split -f2 '=' $line)
-                # strip leading/trailing single quotes
-                set val (string replace -r "^'|'$" '' -- $val)
-                set -gx $key $val
-            end
-        end < $file
+    if not test -f $file
+        return
     end
+
+    while read -l line
+        # Skip blank lines or comments
+        if not string length --quiet $line; or string match -q '#*' -- $line
+            continue
+        end
+
+        # Accept KEY='VALUE'  (no spaces around =)
+        if not string match -qre '^[A-Za-z_][A-Za-z0-9_]*=' -- $line
+            continue
+        end
+
+        # Split only on the first '='
+        set -l pair (string split -m 1 '=' -- $line)
+        set -l key  $pair[1]
+        set -l val  $pair[2]
+
+        # Remove leading and trailing single quotes, if present
+        set val (string trim --chars "'" -- $val)
+
+        # Export into the current environment
+        set -gx $key $val
+    end < $file
 end
 
 function save_environment
