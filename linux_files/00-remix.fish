@@ -1,35 +1,60 @@
 #!/usr/bin/env fish
+#
+# /etc/fish/conf.d/00-wsl-display.fish
+# Runs for every interactive shell.  “return” is used instead of “exit”
+# so that the rest of the shell start-up continues.
 
-# Only the default WSL user should run this script
-if not (id -Gn | grep -c "adm.*wheel\|wheel.*adm" > /dev/null)
-    return
+### 0.   Helpers #############################################################
+
+set -g systemd_saved_environment "$HOME/.systemd.env"
+set -g SYSTEMD_PID (ps -C systemd -o pid= | head -n1)
+
+function load_env_file --description 'Import bash-style KEY='\''VAL'\'' lines'
+    set -l file $argv[1]
+    if test -f $file
+        while read -l line
+            # Match lines like VAR='value'
+            if string match -qre '^([A-Z0-9_]+)=\'.*\'$' -- $line
+                set -l key (string split -f1 '=' $line)
+                set -l val (string split -f2 '=' $line)
+                # strip leading/trailing single quotes
+                set val (string replace -r "^'|'$" '' -- $val)
+                set -gx $key $val
+            end
+        end < $file
+    end
 end
 
-set systemd_saved_environment "$HOME/.systemd.env"
-
-set SYSTEMD_PID (ps -C systemd -o pid= | head -n1)
-
 function save_environment
-    echo "PATH='$PATH'" > $systemd_saved_environment
-    echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'" >> $systemd_saved_environment
-    echo "WSL_INTEROP='$WSL_INTEROP'" >> $systemd_saved_environment
-    echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'" >> $systemd_saved_environment
-    echo "PULSE_SERVER='$PULSE_SERVER'" >> $systemd_saved_environment
-    echo "WAYLAND_DISPLAY='$WAYLAND_DISPLAY'" >> $systemd_saved_environment
+    printf "PATH='%s'\n"          $PATH            >  $systemd_saved_environment
+    printf "WSL_DISTRO_NAME='%s'\n"   $WSL_DISTRO_NAME   >> $systemd_saved_environment
+    printf "WSL_INTEROP='%s'\n"       $WSL_INTEROP       >> $systemd_saved_environment
+    printf "WSL_SYSTEMD_EXECUTION_ARGS='%s'\n" $WSL_SYSTEMD_EXECUTION_ARGS >> $systemd_saved_environment
+    printf "PULSE_SERVER='%s'\n"      $PULSE_SERVER      >> $systemd_saved_environment
+    printf "WAYLAND_DISPLAY='%s'\n"   $WAYLAND_DISPLAY   >> $systemd_saved_environment
 end
 
 function setup_interop
-    set WSL_INTEROP (ls -U /run/WSL/*_interop | tail -1)
+    set -gx WSL_INTEROP (ls -U /run/WSL/*_interop 2>/dev/null | tail -n1)
 end
 
+### 1. Privilege check #######################################################
+
+if id -Gn | grep -qE 'adm.*wheel|wheel.*adm'
+    # OK – continue
+else
+    return
+end
+
+### 2. Display / audio #######################################################
+
 function setup_display
+    # XRDP session
     if test -n "$XRDP_SESSION"
-        if test -f $systemd_saved_environment
-            source $systemd_saved_environment
-        end
+        load_env_file $systemd_saved_environment
 
         if test -n "$WSL_INTEROP"
-            set -x WSL2 1
+            set -gx WSL2 1
             setup_interop
         end
 
@@ -37,39 +62,113 @@ function setup_display
         if test -n "$SYSTEMD_PID"
             rm -f /run/user/(id -u)/wayland*
         end
-        
         return
     end
 
+    # Remote SSH?  Nothing to do.
     if test -n "$SSH_CONNECTION"
         return
     end
 
-    # Check whether it is WSL1 or WSL2
+    # ---------- WSL 2 -------------------------------------------------------
     if test -n "$WSL_INTEROP"
-        # Export an environment variable for helping other processes
-        set -x WSL2 1
-        
+        set -gx WSL2 1
+
         if test -n "$DISPLAY"
             if test -n "$SYSTEMD_PID"
-                set uid (id -u)
-                ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/$uid/
-                ln -fs /mnt/wslg/runtime-dir/wayland-0.lock /run/user/$uid/
-                ln -fs /mnt/wslg/runtime-dir/pulse /run/user/$uid/pulse
+                set -l uid (id -u)
+                ln -fs /mnt/wslg/runtime-dir/wayland-0       /run/user/$uid/
+                ln -fs /mnt/wslg/runtime-dir/wayland-0.lock  /run/user/$uid/
+                ln -fs /mnt/wslg/runtime-dir/pulse           /run/user/$uid/pulse
             end
             return
         end
 
-        # Enable external x display for WSL 2
-        set ipconfig_exec (wslpath "C:\\Windows\\System32\\ipconfig.exe")
-        if not command -v ipconfig.exe > /dev/null 2>&1
+        # --- Figure out Windows host IP for X11 ---------------------------
+        set -l ipconfig_exec (wslpath "C:\\Windows\\System32\\ipconfig.exe")
+        if command -v ipconfig.exe >/dev/null 2>&1
             set ipconfig_exec (command -v ipconfig.exe)
         end
 
-        set wsl2_d_tmp (eval "$ipconfig_exec 2> /dev/null" | grep -n -m 1 "Default Gateway.*: [0-9a-z]" | cut -d : -f 1)
+        set -l gw_line (eval $ipconfig_exec 2>/dev/null | \
+                         grep -n -m1 'Default Gateway.*: [0-9a-fA-F]' | \
+                         cut -d: -f1)
 
-        if test -n "$wsl2_d_tmp"
-            set wsl2_d_tmp (eval "$ipconfig_exec" | sed "$((wsl2_d_tmp - 4))"','"$((wsl2_d_tmp + 0))"'!d' | grep IPv4 | cut -d : -f 2 | sed -e "s|\s||g" -e "s|\r||g")
-            set -x DISPLAY "$wsl2_d_tmp:0"
+        if test -n "$gw_line"
+            set -l wsl2_ip (eval $ipconfig_exec | \
+                             sed "$((gw_line - 4)),$((gw_line))!d" | \
+                             grep IPv4 | cut -d: -f2 | tr -d ' \r')
         else
-            set wsl2_d_tmp (grep </etc/resolv.conf nameserver | awk
+            set -l wsl2_ip (grep -m1 nameserver /etc/resolv.conf | awk '{print $2}')
+        end
+        set -gx DISPLAY "$wsl2_ip:0"
+        return
+    end
+
+    # ---------- WSL 1 -------------------------------------------------------
+    set -gx DISPLAY "localhost:0"
+    set -e  WSL2
+end
+
+### 3. DBus ###############################################################
+
+function setup_dbus
+    if not command -v dbus-launch >/dev/null
+        return
+    end
+    if test -n "$DBUS_SESSION_BUS_ADDRESS"
+        return
+    end
+
+    set -l dbus_pid (pidof dbus-daemon | head -n1)
+    if test -z "$dbus_pid"
+        set -l dbus_env (timeout 2s dbus-launch --auto-syntax)
+        eval $dbus_env
+        echo $dbus_env > /tmp/dbus_env_$DBUS_SESSION_BUS_PID
+    else
+        eval (cat /tmp/dbus_env_$dbus_pid)
+    end
+end
+
+# -------------------------------------------------------------------------
+
+setup_display
+setup_dbus
+
+# Speed-ups and handy aliases
+set -gx NO_AT_BRIDGE 1
+alias  clear  "clear -x"
+alias  ll     "ls -al"
+alias  winget "powershell.exe winget"
+alias  wsl    "wsl.exe"
+
+# GPU / VAAPI tweaks for WSL 2
+if test -n "$WSL2"
+    set -gx VDPAU_DRIVER        d3d12
+    set -gx LIBVA_DRIVER_NAME   d3d12
+    set -gx GALLIUM_DRIVER      d3d12
+end
+
+### 4. Persist env for systemd ##############################################
+
+if test -z "$SYSTEMD_PID"
+    save_environment
+else if test "$SYSTEMD_PID" -eq 1; and test -f $systemd_saved_environment; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
+    load_env_file $systemd_saved_environment
+    setup_interop
+end
+
+### 5. Windows home link ####################################################
+
+if test -z "$WIN_HOME"; and command -v cmd.exe >/dev/null 2>&1
+    set -l wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' | tr -d '\r')
+    if test (string length $wHomeWinPath) -le 3
+        set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' | tr -d '\r')
+    end
+    set -gx WIN_HOME (wslpath -u $wHomeWinPath)
+
+    set -l win_home_lnk "$HOME/winhome"
+    if not test -e $win_home_lnk
+        ln -sf $WIN_HOME $win_home_lnk >/dev/null 2>&1
+    end
+end
