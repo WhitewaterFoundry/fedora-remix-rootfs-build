@@ -126,7 +126,6 @@ function setup_display
 
         # finally export DISPLAY
         set -gx DISPLAY "$wsl2_ip:0"
-        set -gx DISPLAY "$wsl2_ip:0"
         return
     end
 
