@@ -75,8 +75,12 @@ function build() {
   cp "${origin_dir}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
+  cp "${origin_dir}"/linux_files/fedoraremix-load-vgem-module.sudoers "${TMPDIR}"/dist/etc/sudoers.d/fedoraremix-load-vgem-module
+  cp "${origin_dir}"/linux_files/fedoraremix-load-vgem-module.sh "${TMPDIR}"/dist/usr/local/bin/fedoraremix-load-vgem-module
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/fedoraremix-load-vgem-module
+
   cp "${origin_dir}"/linux_files/wsl-distribution.conf "${TMPDIR}"/dist/etc/wsl-distribution.conf
-  
+
   mkdir -p "${TMPDIR}"/dist/usr/lib/wsl
   cp "${origin_dir}"/linux_files/oobe.sh "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh
   chmod +x "${TMPDIR}"/dist/usr/lib/wsl/oobe.sh

@@ -95,6 +95,11 @@ fi
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sudoers" -o /etc/sudoers.d/start-systemd
 sudo curl -L -f "${base_url}/linux_files/start-systemd.sh" -o /usr/local/bin/start-systemd
 
+# Configure vgem module loading
+sudo curl -L -f "${base_url}/linux_files/fedoraremix-load-vgem-module.sudoers" -o /etc/sudoers.d/fedoraremix-load-vgem-module
+sudo curl -L -f "${base_url}/linux_files/fedoraremix-load-vgem-module.sh" -o /usr/local/bin/fedoraremix-load-vgem-module
+sudo chmod +x /usr/local/bin/fedoraremix-load-vgem-module
+
 if [ -f /etc/systemd/system/wsl2-xwayland.service ]; then
   sudo rm -f /etc/systemd/system/wsl2-xwayland.service
   sudo rm -f /etc/systemd/system/wsl2-xwayland.socket

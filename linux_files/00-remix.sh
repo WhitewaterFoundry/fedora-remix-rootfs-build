@@ -43,9 +43,9 @@ setup_display() {
 
     unset WAYLAND_DISPLAY
     if [ -n "$SYSTEMD_PID" ]; then
-      rm -f /run/user/$(id -u)/wayland*
+      rm -f /run/user/"$(id -u)"/wayland*
     fi
-    
+
     return
   fi
 
@@ -57,17 +57,19 @@ setup_display() {
   if [ -n "${WSL_INTEROP}" ]; then
     #Export an environment variable for helping other processes
     export WSL2=1
-    
+
     if [ -n "${DISPLAY}" ]; then
 
       if [ -n "$SYSTEMD_PID" ]; then
-        local uid="$(id -u)"
-        
-        ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/${uid}/
-        ln -fs /mnt/wslg/runtime-dir/wayland-0.lock /run/user/${uid}/
-        ln -fs /mnt/wslg/runtime-dir/pulse /run/user/${uid}/pulse
+        uid="$(id -u)"
+
+        ln -fs /mnt/wslg/runtime-dir/wayland-0 /run/user/"${uid}"/
+        ln -fs /mnt/wslg/runtime-dir/wayland-0.lock /run/user/"${uid}"/
+        ln -fs /mnt/wslg/runtime-dir/pulse /run/user/"${uid}"/pulse
+
+        unset uid
       fi
-    
+
       return
     fi
 
@@ -82,10 +84,10 @@ setup_display() {
     if [ -n "${wsl2_d_tmp}" ]; then
 
       wsl2_d_tmp="$(eval "$ipconfig_exec" | sed "$((wsl2_d_tmp - 4))"','"$((wsl2_d_tmp + 0))"'!d' | grep IPv4 | cut -d : -f 2 | sed -e "s|\s||g" -e "s|\r||g")"
-      export DISPLAY=${wsl2_d_tmp}:0
+      export DISPLAY="${wsl2_d_tmp}":0
     else
       wsl2_d_tmp="$(grep </etc/resolv.conf nameserver | awk '{print $2}')"
-      export DISPLAY=${wsl2_d_tmp}:0
+      export DISPLAY="${wsl2_d_tmp}":0
     fi
 
     unset wsl2_d_tmp
@@ -100,7 +102,7 @@ setup_display() {
 }
 
 setup_dbus() {
-  # if dbus-launch is installed then load it
+  # if dbus-launch is installed, then load it
   if ! (command -v dbus-launch >/dev/null); then
     return
   fi
@@ -144,10 +146,11 @@ if [ -n "${WSL2}" ]; then
   # Setup video acceleration
   export VDPAU_DRIVER=d3d12
   export LIBVA_DRIVER_NAME=d3d12
+  sudo /usr/local/bin/fedoraremix-load-vgem-module
 
   # Setup Gallium Direct3D 12 driver
   export GALLIUM_DRIVER=d3d12
-fi 
+fi
 
 if [ -z "$SYSTEMD_PID" ]; then
 
@@ -166,9 +169,9 @@ fi
 # Check if we have Windows Path
 if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 
-  # Create a symbolic link to the windows home
+  # Create a symbolic link to the window's home
 
-  # Here have a issue: %HOMEDRIVE% might be using a custom set location
+  # Here has an issue: %HOMEDRIVE% might be using a custom set location
   # moving cmd to where Windows is installed might help: %SYSTEMDRIVE%
   wHomeWinPath=$(cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
 

@@ -163,6 +163,8 @@ if test -n "$WSL2"
     set -gx VDPAU_DRIVER      d3d12
     set -gx LIBVA_DRIVER_NAME d3d12
     set -gx GALLIUM_DRIVER    d3d12
+
+    sudo /usr/local/bin/fedoraremix-load-vgem-module
 end
 
 ### ————————————————————————————————
