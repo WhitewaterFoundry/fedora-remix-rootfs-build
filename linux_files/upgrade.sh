@@ -6,10 +6,9 @@ base_url="https://raw.githubusercontent.com/WhitewaterFoundry/fedora-remix-rootf
 sudo curl -L -f "${base_url}/linux_files/upgrade.sh" -o /usr/local/bin/upgrade.sh
 sudo chmod +x /usr/local/bin/upgrade.sh
 
-
 # Do not change above this line to avoid update errors
 
-if [[ ! -L /usr/local/bin/update.sh  ]]; then
+if [[ ! -L /usr/local/bin/update.sh ]]; then
   sudo ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
 fi
 
@@ -58,8 +57,8 @@ declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl
 declare -a target_version=('40' '41' '42')
 declare -i length=${#mesa_version[@]}
 
-for (( i = 0; i < length; i++ )); do
-  if [[ ${VERSION_ID} -eq ${target_version[i]} && $( sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}" ) == 0 ]]; then
+for ((i = 0; i < length; i++)); do
+  if [[ ${VERSION_ID} -eq ${target_version[i]} && $(sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}") == 0 ]]; then
 
     sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
     curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
@@ -72,6 +71,7 @@ if [[ $(id | grep -c video) == 0 ]]; then
   sudo /usr/sbin/groupadd -g 44 wsl-video
   sudo /usr/sbin/usermod -aG wsl-video "$(whoami)"
   sudo /usr/sbin/usermod -aG video "$(whoami)"
+  sudo /usr/sbin/usermod -aG render "$(whoami)"
 fi
 
 if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 0 ]]; then

@@ -1,15 +1,6 @@
 #!/bin/sh
 # bashsupport disable=BP5007
 
-# Only the default WSL user should run this script
-if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
-  return
-fi
-
-systemd_saved_environment="$HOME/.systemd.env"
-
-SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
-
 save_environment() {
   {
     echo "PATH='$PATH'"
@@ -74,16 +65,15 @@ setup_display() {
     fi
 
     # enable external x display for WSL 2
-    ipconfig_exec=$(wslpath "C:\\Windows\\System32\\ipconfig.exe")
-    if (command -v ipconfig.exe >/dev/null 2>&1); then
-      ipconfig_exec=$(command -v ipconfig.exe)
+    route_exec=$(wslpath 'C:\Windows\system32\route.exe')
+
+    if route_exec_path=$(command -v route.exe 2>/dev/null); then
+      route_exec="${route_exec_path}"
     fi
 
-    wsl2_d_tmp="$(eval "$ipconfig_exec 2> /dev/null" | grep -n -m 1 "Default Gateway.*: [0-9a-z]" | cut -d : -f 1)"
+    wsl2_d_tmp="$(eval "$route_exec print 2> /dev/null" | grep 0.0.0.0 | head -1 | awk '{print $4}')"
 
     if [ -n "${wsl2_d_tmp}" ]; then
-
-      wsl2_d_tmp="$(eval "$ipconfig_exec" | sed "$((wsl2_d_tmp - 4))"','"$((wsl2_d_tmp + 0))"'!d' | grep IPv4 | cut -d : -f 2 | sed -e "s|\s||g" -e "s|\r||g")"
       export DISPLAY="${wsl2_d_tmp}":0
     else
       wsl2_d_tmp="$(grep </etc/resolv.conf nameserver | awk '{print $2}')"
@@ -91,7 +81,7 @@ setup_display() {
     fi
 
     unset wsl2_d_tmp
-    unset ipconfig_exec
+    unset route_exec
   else
     # enable external x display for WSL 1
     export DISPLAY=localhost:0
@@ -128,65 +118,78 @@ setup_dbus() {
   unset dbus_pid
 }
 
-setup_display
-setup_dbus
-
-# speed up some GUI apps like gedit
-export NO_AT_BRIDGE=1
-
-# Fix 'clear' scrolling issues
-alias clear='clear -x'
-
-# Custom aliases
-alias ll='ls -al'
-alias winget='powershell.exe winget'
-alias wsl='wsl.exe'
-
-if [ -n "${WSL2}" ]; then
-  # Setup video acceleration
-  export VDPAU_DRIVER=d3d12
-  export LIBVA_DRIVER_NAME=d3d12
-  sudo /usr/local/bin/fedoraremix-load-vgem-module
-
-  # Setup Gallium Direct3D 12 driver
-  export GALLIUM_DRIVER=d3d12
-fi
-
-if [ -z "$SYSTEMD_PID" ]; then
-
-  save_environment
-
-elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ] && [ -n "$WSL_SYSTEMD_EXECUTION_ARGS" ]; then
-  # Only if bult-in systemd was started
-  set -a
-  # shellcheck disable=SC1090
-  . "${systemd_saved_environment}"
-  set +a
-
-  setup_interop
-fi
-
-# Check if we have Windows Path
-if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
-
-  # Create a symbolic link to the window's home
-
-  # Here has an issue: %HOMEDRIVE% might be using a custom set location
-  # moving cmd to where Windows is installed might help: %SYSTEMDRIVE%
-  wHomeWinPath=$(cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
-
-  if [ ${#wHomeWinPath} -le 3 ]; then #wHomeWinPath contains something like H:\
-    wHomeWinPath=$(cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' 2>/dev/null | tr -d '\r')
+main() {
+  # Only the default WSL user should run this script
+  if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
+    return
   fi
 
-  # shellcheck disable=SC2155
-  export WIN_HOME="$(wslpath -u "${wHomeWinPath}")"
+  systemd_saved_environment="$HOME/.systemd.env"
 
-  win_home_lnk=${HOME}/winhome
-  if [ ! -e "${win_home_lnk}" ]; then
-    ln -s -f "${WIN_HOME}" "${win_home_lnk}" >/dev/null 2>&1
+  SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
+
+  setup_display
+  setup_dbus
+
+  # speed up some GUI apps like gedit
+  export NO_AT_BRIDGE=1
+
+  # Fix 'clear' scrolling issues
+  alias clear='clear -x'
+
+  # Custom aliases
+  alias ll='ls -al'
+  alias winget='powershell.exe winget'
+  alias wsl='wsl.exe'
+
+  if [ -n "${WSL2}" ]; then
+    # Setup video acceleration
+    export VDPAU_DRIVER=d3d12
+    export LIBVA_DRIVER_NAME=d3d12
+    sudo /usr/local/bin/fedoraremix-load-vgem-module
+
+    # Setup Gallium Direct3D 12 driver
+    export GALLIUM_DRIVER=d3d12
   fi
 
-  unset win_home_lnk
+  if [ -z "$SYSTEMD_PID" ]; then
 
-fi
+    save_environment
+
+  elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ] && [ -n "$WSL_SYSTEMD_EXECUTION_ARGS" ]; then
+    # Only if bult-in systemd was started
+    set -a
+    # shellcheck disable=SC1090
+    . "${systemd_saved_environment}"
+    set +a
+
+    setup_interop
+  fi
+
+  # Check if we have Windows Path
+  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
+
+    # Create a symbolic link to the window's home
+
+    # Here has an issue: %HOMEDRIVE% might be using a custom set location
+    # moving cmd to where Windows is installed might help: %SYSTEMDRIVE%
+    wHomeWinPath=$(cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
+
+    if [ ${#wHomeWinPath} -le 3 ]; then #wHomeWinPath contains something like H:\
+      wHomeWinPath=$(cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' 2>/dev/null | tr -d '\r')
+    fi
+
+    # shellcheck disable=SC2155
+    export WIN_HOME="$(wslpath -u "${wHomeWinPath}")"
+
+    win_home_lnk=${HOME}/winhome
+    if [ ! -e "${win_home_lnk}" ]; then
+      ln -s -f "${WIN_HOME}" "${win_home_lnk}" >/dev/null 2>&1
+    fi
+
+    unset win_home_lnk
+
+  fi
+}
+
+main "$@"
