@@ -37,7 +37,7 @@ function restore_previous_home() {
 #   1 - If there is an error in any of the steps (useradd, usermod, passwd)
 #######################################
 function create_user() {
-  local default_groups='adm,cdrom,wheel,video,wsl-video'
+  local default_groups='adm,cdrom,wheel,video,wsl-video,render'
   local username=$1
   local previous_home
 
