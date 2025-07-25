@@ -1,7 +1,7 @@
 #! /bin/bash
 
-gpgcheck_enabled=$(dnf config-manager --dump '*' | grep -c "gpgcheck = 1")
+gpgcheck_enabled=$(grep -E "^\s*gpgcheck\s*=\s*1" /etc/yum.repos.d/whitewaterfoundry_fedoraremix.repo)
 
-if [[ ${gpgcheck_enabled} -ge 0 ]]; then
-  dnf config-manager --save --setopt=*.gpgcheck=0
+if [ -n "${gpgcheck_enabled}" ]; then
+  sed -i -e 's/^\s*gpgcheck\s*=\s*1\s*$/gpgcheck=0/' /etc/yum.repos.d/whitewaterfoundry_fedoraremix.repo
 fi
