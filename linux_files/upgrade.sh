@@ -53,8 +53,8 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42')
-declare -a target_version=('40' '41' '42')
+declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.1.0-1_wsl_4.fc43')
+declare -a target_version=('40' '41' '42' '43')
 declare -i length=${#mesa_version[@]}
 
 for ((i = 0; i < length; i++)); do
@@ -78,8 +78,8 @@ if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 0 ]]; then
   (
     source /etc/os-release
 
-    if [[ ${VERSION_ID} -gt 41 ]]; then
-      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-41-"$(uname -m)"
+    if [[ ${VERSION_ID} -gt 42 ]]; then
+      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-42-"$(uname -m)"
     else
       sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
     fi
