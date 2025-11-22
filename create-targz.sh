@@ -71,6 +71,10 @@ function build() {
   cp "${ORIGINDIR}"/linux_files/start-systemd.sh "${TMPDIR}"/dist/usr/local/bin/start-systemd
   chmod +x "${TMPDIR}"/dist/usr/local/bin/start-systemd
 
+  cp "${ORIGINDIR}"/linux_files/create_userpath.sudoers "${TMPDIR}"/dist/etc/sudoers.d/create_userpath
+  cp "${ORIGINDIR}"/linux_files/create_userpath.sh "${TMPDIR}"/dist/usr/local/bin/create_userpath
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/create_userpath
+
   cp "${ORIGINDIR}"/linux_files/wsl2-xwayland.service "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.service
   cp "${ORIGINDIR}"/linux_files/wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/wsl2-xwayland.socket
   ln -sf ../wsl2-xwayland.socket "${TMPDIR}"/dist/etc/systemd/system/sockets.target.wants/
