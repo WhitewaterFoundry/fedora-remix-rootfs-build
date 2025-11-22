@@ -188,7 +188,7 @@ main() {
     save_environment
 
   elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ] && [ -n "$WSL_SYSTEMD_EXECUTION_ARGS" ]; then
-    # Only if bult-in systemd was started
+    # Only if built-in systemd was started
     set -a
     # shellcheck disable=SC1090
     . "${systemd_saved_environment}"
@@ -200,9 +200,9 @@ main() {
   # Check if we have Windows Path
   if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
 
-    # Create a symbolic link to the window's home
+    # Create a symbolic link to the Windows home
 
-    # Here has an issue: %HOMEDRIVE% might be using a custom set location
+    # Here have a issue: %HOMEDRIVE% might be using a custom set location
     # moving cmd to where Windows is installed might help: %SYSTEMDRIVE%
     wHomeWinPath=$(cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
 

@@ -15,7 +15,7 @@ end
 
 # check whether it is WSL1 for WSL2
 if test -n "$WSL_INTEROP"
-    #Export an enviroment variable for helping other processes
+    #Export an environment variable for helping other processes
     set --export WSL2 1
 
     if test -n "$DISPLAY"
