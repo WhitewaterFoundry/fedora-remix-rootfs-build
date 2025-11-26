@@ -63,6 +63,7 @@ function build() {
   cp "${origin_dir}"/linux_files/00-remix.fish "${TMPDIR}"/dist/etc/fish/conf.d/
   chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
   chmod -x,+r "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish
+  chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/bash-prompt-wsl.sh
 
   cp "${origin_dir}"/linux_files/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
