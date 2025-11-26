@@ -60,6 +60,7 @@ sudo chroot rootfs/ dnf -y clean all
 
 echo 'Copy files'
 sudo cp /vagrant/linux_files/00-remix.sh rootfs/etc/profile.d/
+sudo cp /vagrant/linux_files/bash-prompt-wsl.sh rootfs/etc/profile.d/
 
 sudo mkdir -p /etc/fish/conf.d/
 sudo cp /vagrant/linux_files/00-remix.fish rootfs/etc/fish/conf.d/
