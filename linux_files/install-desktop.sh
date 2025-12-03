@@ -361,15 +361,50 @@ function configure_rdp_settings() {
 function mask_conflicting_services() {
   echo "Masking conflicting services..."
   
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
-  sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service
-  sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service
-  sudo ln -sf /dev/null /etc/systemd/system/tmp.mount
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-resolved.service; then
+    echo "Error: Failed to mask systemd-resolved.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-networkd.service; then
+    echo "Error: Failed to mask systemd-networkd.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service; then
+    echo "Error: Failed to mask NetworkManager.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service; then
+    echo "Error: Failed to mask systemd-tmpfiles-setup.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service; then
+    echo "Error: Failed to mask systemd-tmpfiles-clean.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer; then
+    echo "Error: Failed to mask systemd-tmpfiles-clean.timer" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service; then
+    echo "Error: Failed to mask systemd-tmpfiles-setup-dev-early.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service; then
+    echo "Error: Failed to mask systemd-tmpfiles-setup-dev.service" >&2
+    return 1
+  fi
+  
+  if ! sudo ln -sf /dev/null /etc/systemd/system/tmp.mount; then
+    echo "Error: Failed to mask tmp.mount" >&2
+    return 1
+  fi
 }
 
 # Terminate WSL distribution
@@ -414,14 +449,14 @@ function main() {
   configure_x_session "${desktop_choice}" || return 1
 
   if [[ -n "${systemd_pid}" ]]; then
-    configure_system_locale
+    configure_system_locale || return 1
   fi
 
   install_rdp_services || return 1
   configure_rdp_settings "${rdp_port}" "${listen_port}" || return 1
   
   # Mask conflicting services for WSL
-  mask_conflicting_services
+  mask_conflicting_services || return 1
 
   # Get IP address for the summary
   local ip_address
