@@ -52,7 +52,7 @@ for copr_file in rootfs/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:wslutili
   fi
 done
 (
-  source rootfs/etc/os-release && sudo bash -c "curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo chroot rootfs/ env os=fedora dist=\"\${VERSION_ID}\" bash"
+  source rootfs/etc/os-release && curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo chroot rootfs/ env os=fedora dist="${VERSION_ID}" bash
 )
 sudo chroot rootfs/ dnf -y update wslu
 
