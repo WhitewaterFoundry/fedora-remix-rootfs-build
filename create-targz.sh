@@ -170,9 +170,7 @@ EOF
 
   echo "##[section] 'Setup WSLU"
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
-(
-  source /etc/os-release && dnf -y copr enable wslutilities/wslu "\${ID_LIKE}-41-${arch}"
-)
+curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | env os=fedora dist=${version_id} bash
 dnf -y install wslu
 EOF
 

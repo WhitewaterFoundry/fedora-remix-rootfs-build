@@ -44,9 +44,15 @@ echo 'Copy dns'
 sudo cp /etc/resolv.conf rootfs/etc/
 
 echo 'Setup WSLU'
+# Remove old COPR wslu repositories for all Fedora versions
 sudo rm -f rootfs/etc/yum.repos.d/wslutilties.repo
+for copr_file in rootfs/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:wslutilities:wslu*.repo; do
+  if [[ -f "${copr_file}" ]]; then
+    sudo rm -f "${copr_file}"
+  fi
+done
 (
-  source rootfs/etc/os-release && sudo chroot rootfs/ dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"${PREBOOTSTRAP_QEMU_ARCH}"
+  source rootfs/etc/os-release && sudo bash -c "curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo chroot rootfs/ env os=fedora dist=\"\${VERSION_ID}\" bash"
 )
 sudo chroot rootfs/ dnf -y update wslu
 

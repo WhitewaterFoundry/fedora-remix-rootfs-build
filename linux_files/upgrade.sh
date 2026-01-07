@@ -17,10 +17,18 @@ sudo rm -f /var/lib/rpm/.rpm.lock
 sudo dnf -y update --nogpgcheck
 sudo rm -f /var/lib/rpm/.rpm.lock
 
+# Remove old COPR wslu repositories for all Fedora versions
+for copr_file in /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:wslutilities:wslu*.repo; do
+  if [[ -f "${copr_file}" ]]; then
+    sudo rm -f "${copr_file}"
+  fi
+done
+
 # WSLU 4 is not installed
 if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]]; then
   (
-    source /etc/os-release && sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+    source /etc/os-release
+    curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
   )
   sudo rm -f /var/lib/rpm/.rpm.lock
   sudo dnf -y update wslu --nogpgcheck
@@ -72,18 +80,6 @@ if [[ $(id | grep -c video) == 0 ]]; then
   sudo /usr/sbin/usermod -aG wsl-video "$(whoami)"
   sudo /usr/sbin/usermod -aG video "$(whoami)"
   sudo /usr/sbin/usermod -aG render "$(whoami)"
-fi
-
-if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 0 ]]; then
-  (
-    source /etc/os-release
-
-    if [[ ${VERSION_ID} -gt 41 ]]; then
-      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-41-"$(uname -m)"
-    else
-      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
-    fi
-  )
 fi
 
 if [[ -f "/etc/profile.d/check-dnf.sh" ]]; then
