@@ -18,14 +18,16 @@ sudo dnf -y update --nogpgcheck
 sudo rm -f /var/lib/rpm/.rpm.lock
 
 # Remove old COPR wslu repositories for all Fedora versions
+copr_found=false
 for copr_file in /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:wslutilities:wslu*.repo; do
   if [[ -f "${copr_file}" ]]; then
     sudo rm -f "${copr_file}"
+    copr_found=true
   fi
 done
 
-# WSLU 4 is not installed
-if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]]; then
+# WSLU 4 is not installed or COPR was found and removed
+if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]] || [[ "${copr_found}" == true ]]; then
   (
     source /etc/os-release
     curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
