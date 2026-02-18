@@ -1,6 +1,6 @@
 #! /bin/bash
 
-gpgcheck_enabled=$(grep -E "^\s*gpgcheck\s*=\s*1" /etc/yum.repos.d/whitewaterfoundry_fedoraremix.repo)
+gpgcheck_enabled=$(grep -E "^\s*gpgcheck\s*=\s*1\s*$" /etc/yum.repos.d/whitewaterfoundry_fedoraremix.repo)
 
 if [ -n "${gpgcheck_enabled}" ]; then
   sed -i -e 's/^\s*gpgcheck\s*=\s*1\s*$/gpgcheck=0/' /etc/yum.repos.d/whitewaterfoundry_fedoraremix.repo
