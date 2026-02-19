@@ -17,7 +17,9 @@ if [ "$PS1" = "$DEFAULT_PROMPT" ]; then
   PS1="$DESIRED_PROMPT"
 fi
 
-export PS1='\[\033]133;D;$?\]\[\033\\\033]133;A\033\\\]'"${PS1}"'\[\033]9;9;"$(wslpath -w "${PWD}")"\033\\\]\[\033]133;B\033\\\]'
+export PS0='\[\e]133;C\e\\\]'
+export PS1='\[\e]133;D;$?\e\\\]\[\e]133;A\e\\\]'"${PS1}"'\[\e]9;9;"$(wslpath -w "${PWD}")"\e\\\]\[\e]133;B\e\\\]'
+export PS2=''
 
 unset DEFAULT_PROMPT
 unset DESIRED_PROMPT

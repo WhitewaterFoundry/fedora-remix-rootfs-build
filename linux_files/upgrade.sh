@@ -98,6 +98,12 @@ sudo curl -L -f "${base_url}/linux_files/fedoraremix-load-vgem-module.sudoers" -
 sudo curl -L -f "${base_url}/linux_files/fedoraremix-load-vgem-module.sh" -o /usr/local/bin/fedoraremix-load-vgem-module
 sudo chmod +x /usr/local/bin/fedoraremix-load-vgem-module
 
+# Add create_userpath script
+sudo curl -L -f "${base_url}/linux_files/create_userpath.sudoers" -o /etc/sudoers.d/create_userpath
+sudo curl -L -f "${base_url}/linux_files/create_userpath.sh" -o /usr/local/bin/create_userpath
+sudo chmod +x /usr/local/bin/create_userpath
+
+# Remove conflicting services
 if [ -f /etc/systemd/system/wsl2-xwayland.service ]; then
   sudo rm -f /etc/systemd/system/wsl2-xwayland.service
   sudo rm -f /etc/systemd/system/wsl2-xwayland.socket
@@ -107,13 +113,14 @@ fi
 # Mask conflicting services
 sudo ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
-sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service
 sudo ln -sf /dev/null /etc/systemd/system/tmp.mount
+sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service
+sudo ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service
 
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
 sudo curl -L -f "${base_url}/linux_files/journalctl3.py" -o /usr/local/bin/wsljournalctl
