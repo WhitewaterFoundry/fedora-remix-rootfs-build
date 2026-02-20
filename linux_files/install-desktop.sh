@@ -445,6 +445,17 @@ function mask_conflicting_services() {
   fi
 }
 
+# Check that the script is running inside WSL2; exit with a message if not
+function check_wsl2() {
+  if [[ -z "${WSL_INTEROP:-}" ]]; then
+    whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
+      --title "WSL2 Required" \
+      --msgbox "This setup requires WSL2.\n\nPlease migrate to WSL2 before running this script.\nSee: https://aka.ms/wsl2" \
+      10 60
+    return 1
+  fi
+}
+
 # Terminate WSL distribution
 function terminate_wsl_distribution() {
   if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
@@ -457,6 +468,9 @@ function terminate_wsl_distribution() {
 # Main setup function
 function main() {
   echo "Starting Fedora Remix Desktop Setup..."
+
+  # Ensure we are running inside WSL2
+  check_wsl2 || exit 1
 
   # Run update script if available
   run_update_script
