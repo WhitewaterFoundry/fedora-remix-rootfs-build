@@ -154,6 +154,17 @@ function get_rdp_port_input() {
     return 1
   fi
 
+  # Validate that the port is numeric
+  if ! [[ "${port}" =~ ^[0-9]+$ ]]; then
+    echo "Error: RDP port must be a numeric value" >&2
+    return 1
+  fi
+
+  # Validate that the port is within the valid range 1-65535
+  if (( port < 1 || port > 65535 )); then
+    echo "Error: RDP port must be between 1 and 65535" >&2
+    return 1
+  fi
   echo "${port}"
 }
 
