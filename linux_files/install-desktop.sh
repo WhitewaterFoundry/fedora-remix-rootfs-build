@@ -172,7 +172,7 @@ function get_rdp_port_input() {
   fi
 
   # Validate that the port is within the valid range 1-65535
-  if (( port < 1 || port > 65535 )); then
+  if (( 10#${port} < 1 || 10#${port} > 65535 )); then
     echo "Error: RDP port must be between 1 and 65535" >&2
     return 1
   fi
@@ -200,7 +200,7 @@ function get_listen_port_input() {
     return 1
   fi
 
-  if (( listen_port < 1 || listen_port > 65535 )); then
+  if (( 10#${listen_port} < 1 || 10#${listen_port} > 65535 )); then
     echo "Error: Listen port must be in the range 1-65535" >&2
     return 1
   fi
@@ -447,11 +447,18 @@ function mask_conflicting_services() {
 
 # Check that the script is running inside WSL2; exit with a message if not
 function check_wsl2() {
-  if [[ -z "${WSL_INTEROP:-}" ]]; then
-    whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
-      --title "WSL2 Required" \
-      --msgbox "This setup requires WSL2.\n\nPlease migrate to WSL2 before running this script.\nSee: https://aka.ms/wsl2" \
-      10 60
+  if [[ -z "${WSL2:-}" ]]; then
+    if command -v whiptail >/dev/null 2>&1; then
+      whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
+        --title "WSL2 Required" \
+        --msgbox "This setup requires WSL2.\n\nPlease migrate to WSL2 before running this script.\nSee: https://aka.ms/wsl2" \
+        10 60
+    else
+      >&2 printf '%s\n\n%s\n%s\n' \
+        "This setup requires WSL2." \
+        "Please migrate to WSL2 before running this script." \
+        "See: https://aka.ms/wsl2"
+    fi
     return 1
   fi
 }
