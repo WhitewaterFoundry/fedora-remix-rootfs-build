@@ -44,9 +44,11 @@ echo 'Copy dns'
 sudo cp /etc/resolv.conf rootfs/etc/
 
 echo 'Setup WSLU'
-sudo rm -f rootfs/etc/yum.repos.d/wslutilties.repo
+# Remove old COPR wslu repositories for all Fedora versions
+
+# Always setup packagecloud repo and update wslu
 (
-  source rootfs/etc/os-release && sudo chroot rootfs/ dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"${PREBOOTSTRAP_QEMU_ARCH}"
+  source rootfs/etc/os-release && curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo chroot rootfs/ env os=fedora dist="${VERSION_ID}" bash
 )
 sudo chroot rootfs/ dnf -y update wslu
 
@@ -60,6 +62,8 @@ sudo chroot rootfs/ dnf -y clean all
 
 echo 'Copy files'
 sudo cp /vagrant/linux_files/00-remix.sh rootfs/etc/profile.d/
+sudo cp /vagrant/linux_files/bash-prompt-wsl.sh rootfs/etc/profile.d/
+sudo chmod -x,+r rootfs/etc/profile.d/bash-prompt-wsl.sh
 
 sudo mkdir -p /etc/fish/conf.d/
 sudo cp /vagrant/linux_files/00-remix.fish rootfs/etc/fish/conf.d/

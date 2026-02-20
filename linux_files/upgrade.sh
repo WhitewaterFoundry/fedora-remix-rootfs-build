@@ -12,19 +12,57 @@ if [[ ! -L /usr/local/bin/update.sh ]]; then
   sudo ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
 fi
 
-sudo rm -f /etc/yum.repos.d/wslutilties.repo
-sudo rm -f /var/lib/rpm/.rpm.lock
-sudo dnf -y update --nogpgcheck
-sudo rm -f /var/lib/rpm/.rpm.lock
+function fix_wsl1() {
+  if [[ -z ${WSL2} ]]; then
+    sudo rm -f /var/lib/rpm/.rpm.lock
+    # If WSL1 fix systemd upgrades
+    if pushd /bin >/dev/null; then
+      sudo mv -f systemd-sysusers{,.org}
+      sudo ln -s echo systemd-sysusers
+      popd >/dev/null || true
+    fi
+  fi
+}
 
-# WSLU 4 is not installed
-if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]]; then
+function dnf_install() {
+  if [[ -z ${WSL2} ]]; then
+    sudo dnf -y install --nogpgcheck "$@"
+  else
+    sudo dnf -y install "$@"
+  fi
+}
+
+function dnf_update() {
+  if [[ -z ${WSL2} ]]; then
+    sudo dnf -y update --nogpgcheck "$@"
+  else
+    sudo dnf -y update "$@"
+  fi
+}
+
+sudo rm -f /etc/yum.repos.d/wslutilties.repo
+fix_wsl1
+dnf_update
+fix_wsl1
+
+# Remove old COPR wslu repositories for all Fedora versions
+copr_found=false
+for copr_file in /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:wslutilities:wslu*.repo; do
+  if [[ -f "${copr_file}" ]]; then
+    sudo rm -f "${copr_file}"
+    copr_found=true
+  fi
+done
+
+# WSLU 4 is not installed or COPR was found and removed
+if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]] || [[ "${copr_found}" == true ]]; then
   (
-    source /etc/os-release && sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
+    source /etc/os-release
+    curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
   )
-  sudo rm -f /var/lib/rpm/.rpm.lock
-  sudo dnf -y update wslu --nogpgcheck
-  sudo rm -f /var/lib/rpm/.rpm.lock
+  fix_wsl1
+  dnf_update wslu
+  fix_wsl1
 fi
 
 # Update the release and main startup script files
@@ -38,7 +76,7 @@ sudo chmod -x,+r /etc/profile.d/00-remix.sh
   sudo curl -L -f "${base_url}/linux_files/os-release-${VERSION_ID}" -o /etc/os-release
 
   if [[ ${VERSION_ID} -eq '39' && ! -f /etc/profile.d/bash-color-prompt.sh ]]; then
-    sudo dnf -y install --nogpgcheck bash-color-prompt
+    dnf_install bash-color-prompt
   fi
 )
 sudo curl -L -f "${base_url}/linux_files/bash-prompt-wsl.sh" -o /etc/profile.d/bash-prompt-wsl.sh
@@ -62,7 +100,7 @@ for ((i = 0; i < length; i++)); do
 
     sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
     curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
-    sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
+    dnf_install --allowerasing mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
     sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
   fi
 done
@@ -72,18 +110,6 @@ if [[ $(id | grep -c video) == 0 ]]; then
   sudo /usr/sbin/usermod -aG wsl-video "$(whoami)"
   sudo /usr/sbin/usermod -aG video "$(whoami)"
   sudo /usr/sbin/usermod -aG render "$(whoami)"
-fi
-
-if [[ $(sudo dnf -y copr list | grep -c "wslutilities/wslu") == 0 ]]; then
-  (
-    source /etc/os-release
-
-    if [[ ${VERSION_ID} -gt 42 ]]; then
-      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-42-"$(uname -m)"
-    else
-      sudo dnf -y copr enable wslutilities/wslu "${ID_LIKE}"-"${VERSION_ID}"-"$(uname -m)"
-    fi
-  )
 fi
 
 if [[ -f "/etc/profile.d/check-dnf.sh" ]]; then
@@ -100,6 +126,12 @@ sudo curl -L -f "${base_url}/linux_files/fedoraremix-load-vgem-module.sudoers" -
 sudo curl -L -f "${base_url}/linux_files/fedoraremix-load-vgem-module.sh" -o /usr/local/bin/fedoraremix-load-vgem-module
 sudo chmod +x /usr/local/bin/fedoraremix-load-vgem-module
 
+# Add create_userpath script
+sudo curl -L -f "${base_url}/linux_files/create_userpath.sudoers" -o /etc/sudoers.d/create_userpath
+sudo curl -L -f "${base_url}/linux_files/create_userpath.sh" -o /usr/local/bin/create_userpath
+sudo chmod +x /usr/local/bin/create_userpath
+
+# Remove conflicting services
 if [ -f /etc/systemd/system/wsl2-xwayland.service ]; then
   sudo rm -f /etc/systemd/system/wsl2-xwayland.service
   sudo rm -f /etc/systemd/system/wsl2-xwayland.socket
@@ -109,13 +141,14 @@ fi
 # Mask conflicting services
 sudo ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
-sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service
 sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service
 sudo ln -sf /dev/null /etc/systemd/system/tmp.mount
+sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service
+sudo ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service
 
 sudo curl -L -f "${base_url}/linux_files/systemctl3.py" -o /usr/local/bin/wslsystemctl
 sudo curl -L -f "${base_url}/linux_files/journalctl3.py" -o /usr/local/bin/wsljournalctl
