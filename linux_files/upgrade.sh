@@ -12,10 +12,18 @@ if [[ ! -L /usr/local/bin/update.sh ]]; then
   sudo ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
 fi
 
+function fix_wsl1() {
+  if [[ -z ${WSL2} ]]; then
+    sudo rm -f /var/lib/rpm/.rpm.lock
+    # If WSL1 fix systemd upgrades
+    cd /bin && sudo mv -f systemd-sysusers{,.org} && sudo ln -s echo systemd-sysusers && cd -
+  fi
+}
+
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
-sudo rm -f /var/lib/rpm/.rpm.lock
+fix_wsl1
 sudo dnf -y update --nogpgcheck
-sudo rm -f /var/lib/rpm/.rpm.lock
+fix_wsl1
 
 # Remove old COPR wslu repositories for all Fedora versions
 copr_found=false
@@ -32,9 +40,9 @@ if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]] || [[ "${copr_found}" == true ]];
     source /etc/os-release
     curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
   )
-  sudo rm -f /var/lib/rpm/.rpm.lock
+  fix_wsl1
   sudo dnf -y update wslu --nogpgcheck
-  sudo rm -f /var/lib/rpm/.rpm.lock
+  fix_wsl1
 fi
 
 # Update the release and main startup script files
