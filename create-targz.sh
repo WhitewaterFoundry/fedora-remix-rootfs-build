@@ -80,6 +80,10 @@ function build() {
   cp "${origin_dir}"/linux_files/fedoraremix-load-vgem-module.sh "${TMPDIR}"/dist/usr/local/bin/fedoraremix-load-vgem-module
   chmod +x "${TMPDIR}"/dist/usr/local/bin/fedoraremix-load-vgem-module
 
+  cp "${origin_dir}"/linux_files/create_userpath.sudoers "${TMPDIR}"/dist/etc/sudoers.d/create_userpath
+  cp "${origin_dir}"/linux_files/create_userpath.sh "${TMPDIR}"/dist/usr/local/bin/create_userpath
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/create_userpath
+
   cp "${origin_dir}"/linux_files/wsl-distribution.conf "${TMPDIR}"/dist/etc/wsl-distribution.conf
 
   mkdir -p "${TMPDIR}"/dist/usr/lib/wsl

@@ -136,6 +136,17 @@ function get_hostname_input() {
     return 1
   fi
 
+  # Validate hostname: alphanumeric, hyphens, and periods; must not start or end with a hyphen; 1-253 chars
+  if [[ ${#hostname} -gt 253 ]]; then
+    echo "Error: Hostname must not exceed 253 characters" >&2
+    return 1
+  fi
+
+  if ! [[ "${hostname}" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
+    echo "Error: Invalid hostname. Use only alphanumeric characters, hyphens, and periods." >&2
+    return 1
+  fi
+
   echo "${hostname}"
 }
 
@@ -180,6 +191,17 @@ function get_listen_port_input() {
 
   if [[ -z "${listen_port}" ]]; then
     echo "Error: Listen port cannot be empty" >&2
+    return 1
+  fi
+
+  # Validate that listen_port is a valid integer port in the range 1-65535
+  if ! [[ "${listen_port}" =~ ^[0-9]+$ ]]; then
+    echo "Error: Listen port must be a numeric value" >&2
+    return 1
+  fi
+
+  if (( listen_port < 1 || listen_port > 65535 )); then
+    echo "Error: Listen port must be in the range 1-65535" >&2
     return 1
   fi
 
@@ -384,6 +406,11 @@ function mask_conflicting_services() {
   
   if ! sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service; then
     echo "Error: Failed to mask NetworkManager.service" >&2
+    return 1
+  fi
+
+  if ! sudo ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service; then
+    echo "Error: Failed to mask NetworkManager-wait-online.service" >&2
     return 1
   fi
   

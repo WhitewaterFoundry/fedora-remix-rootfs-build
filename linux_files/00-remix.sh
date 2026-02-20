@@ -219,6 +219,8 @@ main() {
 
   SYSTEMD_PID="$(ps -C systemd -o pid= | head -n1)"
 
+  define_xdg_environment
+
   setup_display
 
   if [ -z "$SYSTEMD_PID" ] && [ -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
@@ -258,8 +260,6 @@ main() {
 
     setup_interop
   fi
-
-  define_xdg_environment
 
   # Check if we have Windows Path
   if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
