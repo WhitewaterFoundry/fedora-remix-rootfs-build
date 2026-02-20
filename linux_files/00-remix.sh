@@ -250,7 +250,7 @@ main() {
     save_environment
   elif [ -n "$SYSTEMD_PID" ] && [ "$SYSTEMD_PID" -eq 1 ] && [ -f "$HOME/.systemd.env" ] &&
     [ -n "$WSL_SYSTEMD_EXECUTION_ARGS" ]; then
-    # Only if bult-in systemd was started
+    # Only if built-in systemd was started
     set -a
     # shellcheck disable=SC1090
     . "${systemd_saved_environment}"
