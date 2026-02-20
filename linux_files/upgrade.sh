@@ -16,7 +16,11 @@ function fix_wsl1() {
   if [[ -z ${WSL2} ]]; then
     sudo rm -f /var/lib/rpm/.rpm.lock
     # If WSL1 fix systemd upgrades
-    cd /bin && sudo mv -f systemd-sysusers{,.org} && sudo ln -s echo systemd-sysusers && cd -
+    if pushd /bin >/dev/null; then
+      sudo mv -f systemd-sysusers{,.org}
+      sudo ln -s echo systemd-sysusers
+      popd >/dev/null || true
+    fi
   fi
 }
 
