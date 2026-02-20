@@ -24,9 +24,25 @@ function fix_wsl1() {
   fi
 }
 
+function dnf_install() {
+  if [[ -z ${WSL2} ]]; then
+    sudo dnf -y install --nogpgcheck "$@"
+  else
+    sudo dnf -y install "$@"
+  fi
+}
+
+function dnf_update() {
+  if [[ -z ${WSL2} ]]; then
+    sudo dnf -y update --nogpgcheck "$@"
+  else
+    sudo dnf -y update "$@"
+  fi
+}
+
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
 fix_wsl1
-sudo dnf -y update --nogpgcheck
+dnf_update
 fix_wsl1
 
 # Remove old COPR wslu repositories for all Fedora versions
@@ -45,7 +61,7 @@ if [[ "$(wslsys -v | grep -c "v4\.")" -eq 0 ]] || [[ "${copr_found}" == true ]];
     curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/wslu/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
   )
   fix_wsl1
-  sudo dnf -y update wslu --nogpgcheck
+  dnf_update wslu
   fix_wsl1
 fi
 
@@ -60,7 +76,7 @@ sudo chmod -x,+r /etc/profile.d/00-remix.sh
   sudo curl -L -f "${base_url}/linux_files/os-release-${VERSION_ID}" -o /etc/os-release
 
   if [[ ${VERSION_ID} -eq '39' && ! -f /etc/profile.d/bash-color-prompt.sh ]]; then
-    sudo dnf -y install --nogpgcheck bash-color-prompt
+    dnf_install bash-color-prompt
   fi
 )
 sudo curl -L -f "${base_url}/linux_files/bash-prompt-wsl.sh" -o /etc/profile.d/bash-prompt-wsl.sh
@@ -84,7 +100,7 @@ for ((i = 0; i < length; i++)); do
 
     sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
     curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
-    sudo dnf -y install --allowerasing --nogpgcheck mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
+    dnf_install --allowerasing mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
     sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
   fi
 done
