@@ -24,22 +24,22 @@ define_xdg_environment() {
   if [ -z "${XDG_DATA_HOME}" ]; then
     export XDG_DATA_HOME="${HOME}/.local/share"
   fi
-  mkdir -p "${XDG_DATA_HOME}"
+  mkdir -p "${XDG_DATA_HOME}" 2>/dev/null || true
 
   if [ -z "${XDG_CONFIG_HOME}" ]; then
     export XDG_CONFIG_HOME="${HOME}/.config"
   fi
-  mkdir -p "${XDG_CONFIG_HOME}"
+  mkdir -p "${XDG_CONFIG_HOME}" 2>/dev/null || true
 
   if [ -z "${XDG_STATE_HOME}" ]; then
     export XDG_STATE_HOME="${HOME}/.local/state"
   fi
-  mkdir -p "${XDG_STATE_HOME}"
+  mkdir -p "${XDG_STATE_HOME}" 2>/dev/null || true
 
   if [ -z "${XDG_CACHE_HOME}" ]; then
     export XDG_CACHE_HOME="${HOME}/.cache"
   fi
-  mkdir -p "${XDG_CACHE_HOME}"
+  mkdir -p "${XDG_CACHE_HOME}" 2>/dev/null || true
 
   if [ -z "${XDG_DATA_DIRS}" ]; then
     export XDG_DATA_DIRS="/usr/local/share:/usr/share"
