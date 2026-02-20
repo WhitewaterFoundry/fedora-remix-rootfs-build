@@ -63,6 +63,7 @@ function build() {
   cp "${origin_dir}"/linux_files/00-remix.fish "${TMPDIR}"/dist/etc/fish/conf.d/
   chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/00-remix.sh
   chmod -x,+r "${TMPDIR}"/dist/etc/fish/conf.d/00-remix.fish
+  chmod -x,+r "${TMPDIR}"/dist/etc/profile.d/bash-prompt-wsl.sh
 
   cp "${origin_dir}"/linux_files/upgrade.sh "${TMPDIR}"/dist/usr/local/bin/
   chmod +x "${TMPDIR}"/dist/usr/local/bin/upgrade.sh
@@ -78,6 +79,10 @@ function build() {
   cp "${origin_dir}"/linux_files/fedoraremix-load-vgem-module.sudoers "${TMPDIR}"/dist/etc/sudoers.d/fedoraremix-load-vgem-module
   cp "${origin_dir}"/linux_files/fedoraremix-load-vgem-module.sh "${TMPDIR}"/dist/usr/local/bin/fedoraremix-load-vgem-module
   chmod +x "${TMPDIR}"/dist/usr/local/bin/fedoraremix-load-vgem-module
+
+  cp "${origin_dir}"/linux_files/create_userpath.sudoers "${TMPDIR}"/dist/etc/sudoers.d/create_userpath
+  cp "${origin_dir}"/linux_files/create_userpath.sh "${TMPDIR}"/dist/usr/local/bin/create_userpath
+  chmod +x "${TMPDIR}"/dist/usr/local/bin/create_userpath
 
   cp "${origin_dir}"/linux_files/wsl-distribution.conf "${TMPDIR}"/dist/etc/wsl-distribution.conf
 
@@ -106,6 +111,7 @@ function build() {
 ln -sf /dev/null /etc/systemd/system/systemd-resolved.service
 ln -sf /dev/null /etc/systemd/system/systemd-networkd.service
 ln -sf /dev/null /etc/systemd/system/NetworkManager.service
+ln -sf /dev/null /etc/systemd/system/NetworkManager-wait-online.service
 ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service
 ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service
 ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer
