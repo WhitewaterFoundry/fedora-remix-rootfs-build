@@ -18,6 +18,11 @@
 function main() {
   local uid="${1}"
 
+  # Validate that a numeric uid was provided before proceeding.
+  if [[ -z "${uid}" || ! "${uid}" =~ ^[0-9]+$ ]]; then
+    echo "Usage: $0 <numeric-uid>" >&2
+    return 1
+  fi
   local user_path="/run/user/${uid}"
   if [[ ! -d "${user_path}" ]]; then
     mkdir -p "${user_path}" 2>/dev/null
