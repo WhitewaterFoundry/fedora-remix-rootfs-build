@@ -42,16 +42,63 @@ function load_env_file --description 'Import lines like VAR='\''VALUE'\'''
 end
 
 function save_environment
-    printf "PATH='%s'\n"                    $PATH                            >  $systemd_saved_environment
-    printf "WSL_DISTRO_NAME='%s'\n"         $WSL_DISTRO_NAME                 >> $systemd_saved_environment
-    printf "WSL_INTEROP='%s'\n"             $WSL_INTEROP                     >> $systemd_saved_environment
-    printf "WSL_SYSTEMD_EXECUTION_ARGS='%s'\n" $WSL_SYSTEMD_EXECUTION_ARGS   >> $systemd_saved_environment
-    printf "PULSE_SERVER='%s'\n"            $PULSE_SERVER                    >> $systemd_saved_environment
-    printf "WAYLAND_DISPLAY='%s'\n"         $WAYLAND_DISPLAY                 >> $systemd_saved_environment
+    begin
+        if test -n "$PATH"
+            echo "PATH='$PATH'"
+        end
+        if test -n "$WSL_DISTRO_NAME"
+            echo "WSL_DISTRO_NAME='$WSL_DISTRO_NAME'"
+        end
+        if test -n "$WSL_INTEROP"
+            echo "WSL_INTEROP='$WSL_INTEROP'"
+        end
+        if test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
+            echo "WSL_SYSTEMD_EXECUTION_ARGS='$WSL_SYSTEMD_EXECUTION_ARGS'"
+        end
+        if test -n "$PULSE_SERVER"
+            echo "PULSE_SERVER='$PULSE_SERVER'"
+        end
+        if test -n "$WAYLAND_DISPLAY"
+            echo "WAYLAND_DISPLAY='$WAYLAND_DISPLAY'"
+        end
+    end > $systemd_saved_environment
 end
 
 function setup_interop
     set -gx WSL_INTEROP (ls -U /run/WSL/*_interop 2>/dev/null | tail -n1)
+end
+
+function define_xdg_environment
+    # XDG Base Directory Specification
+    # https://specifications.freedesktop.org/basedir/latest/
+
+    if test -z "$XDG_DATA_HOME"
+        set -gx XDG_DATA_HOME "$HOME/.local/share"
+    end
+    mkdir -p "$XDG_DATA_HOME" 2>/dev/null; or true
+
+    if test -z "$XDG_CONFIG_HOME"
+        set -gx XDG_CONFIG_HOME "$HOME/.config"
+    end
+    mkdir -p "$XDG_CONFIG_HOME" 2>/dev/null; or true
+
+    if test -z "$XDG_STATE_HOME"
+        set -gx XDG_STATE_HOME "$HOME/.local/state"
+    end
+    mkdir -p "$XDG_STATE_HOME" 2>/dev/null; or true
+
+    if test -z "$XDG_CACHE_HOME"
+        set -gx XDG_CACHE_HOME "$HOME/.cache"
+    end
+    mkdir -p "$XDG_CACHE_HOME" 2>/dev/null; or true
+
+    if test -z "$XDG_DATA_DIRS"
+        set -gx XDG_DATA_DIRS "/usr/local/share:/usr/share"
+    end
+
+    if test -z "$XDG_CONFIG_DIRS"
+        set -gx XDG_CONFIG_DIRS "/etc/xdg"
+    end
 end
 
 ### ————————————————————————————————
@@ -68,7 +115,9 @@ end
 function setup_display
     # XRDP session
     if test -n "$XRDP_SESSION"
-        load_env_file $systemd_saved_environment
+        if test -f "$systemd_saved_environment"
+            load_env_file $systemd_saved_environment
+        end
 
         if test -n "$WSL_INTEROP"
             set -gx WSL2 1
@@ -77,8 +126,13 @@ function setup_display
 
         set -e WAYLAND_DISPLAY
         if test -n "$SYSTEMD_PID"
-            rm -f /run/user/(id -u)/wayland*
+            rm -f /run/user/(id -u)/wayland* 2>/dev/null
         end
+
+        if test -z "$PULSE_SERVER"
+            pulseaudio --enable-memfd=FALSE --disable-shm=TRUE --log-target=syslog --start >/dev/null 2>&1
+        end
+
         return
     end
 
@@ -93,34 +147,59 @@ function setup_display
 
         # inside WSLg (DISPLAY set)?
         if test -n "$DISPLAY"
-            if test -n "$SYSTEMD_PID"
-                set -l uid (id -u)
-                ln -fs /mnt/wslg/runtime-dir/wayland-0       /run/user/$uid/
-                ln -fs /mnt/wslg/runtime-dir/wayland-0.lock  /run/user/$uid/
-                ln -fs /mnt/wslg/runtime-dir/pulse           /run/user/$uid/pulse
+            set -l uid (id -u)
+
+            set -l user_path "/run/user/$uid"
+            if not test -d "$user_path"
+                sudo /usr/local/bin/create_userpath "$uid" 2>/dev/null
             end
+
+            if test -z "$SYSTEMD_PID"
+                set -gx XDG_RUNTIME_DIR "$user_path"
+            end
+
+            set -l wslg_runtime_dir "/mnt/wslg/runtime-dir"
+
+            ln -fs "$wslg_runtime_dir"/wayland-0 "$user_path"/ 2>/dev/null
+            ln -fs "$wslg_runtime_dir"/wayland-0.lock "$user_path"/ 2>/dev/null
+
+            set -l pulse_path "$user_path/pulse"
+            set -l wslg_pulse_dir "$wslg_runtime_dir"/pulse
+
+            if not test -d "$pulse_path"
+                mkdir -p "$pulse_path" 2>/dev/null
+
+                ln -fs "$wslg_pulse_dir"/native "$pulse_path"/ 2>/dev/null
+                ln -fs "$wslg_pulse_dir"/pid "$pulse_path"/ 2>/dev/null
+
+            else if test -S "$pulse_path/native"
+                # Handle stale socket: remove it and recreate as symlink to WSLg pulse
+                rm -f "$pulse_path/native" 2>/dev/null
+                ln -fs "$wslg_pulse_dir"/native "$pulse_path"/ 2>/dev/null
+            end
+
             return
         end
 
-        # compute Windows host IP for X11
-        set -l ipconfig_exec (wslpath "C:\\Windows\\System32\\ipconfig.exe")
-        if command -v ipconfig.exe > /dev/null 2>&1
-            set ipconfig_exec (command -v ipconfig.exe)
+        # enable external x display for WSL 2
+        set -l route_exec (wslpath 'C:\Windows\system32\route.exe')
+
+        if set -l route_exec_path (command -v route.exe 2>/dev/null)
+            set route_exec "$route_exec_path"
         end
 
-        set -l gw_line ( $ipconfig_exec 2>/dev/null | grep -a -n -m1 'Default Gateway.*: [0-9a-fA-F]' | cut -d: -f1 )
-        if test -n "$gw_line"
-            set -l start (math $gw_line - 4)
-            set -l end   $gw_line
-            set -l wsl2_ip ( $ipconfig_exec | sed "$start,$end!d" | grep -a IPv4 | cut -d: -f2 | tr -d ' \r' )
+        set -l wsl2_d_tmp (eval "$route_exec print 2>/dev/null" | grep -a 0.0.0.0 | head -1 | awk '{print $4}')
+
+        if test -n "$wsl2_d_tmp"
+            set -gx DISPLAY "$wsl2_d_tmp":0
         else
-            set -l wsl2_ip (grep -m1 nameserver /etc/resolv.conf | awk '{print $2}')
+            set wsl2_d_tmp (ip route | grep default | awk '{print $3; exit;}')
+            set -gx DISPLAY "$wsl2_d_tmp":0
         end
-        set -gx DISPLAY "$wsl2_ip:0"
     else
         # WSL1 fallback
         set -gx DISPLAY "localhost:0"
-        set -e  WSL2
+        set -e WSL2
     end
 end
 
@@ -135,19 +214,49 @@ function setup_dbus
         return
     end
 
-    set -l dbus_pid (pidof dbus-daemon | head -n1)
+    # Use a per-user directory for storing the D-Bus environment
+    set -l dbus_env_dir (if test -n "$XDG_RUNTIME_DIR"; echo "$XDG_RUNTIME_DIR"; else; echo "$HOME/.cache"; end)
+    mkdir -p "$dbus_env_dir" 2>/dev/null; or true
+
+    set -l dbus_pid (pidof -s dbus-daemon)
+
     if test -z "$dbus_pid"
-        set -l dbus_env (timeout 2s dbus-launch --auto-syntax)
-        eval $dbus_env
-        echo $dbus_env > /tmp/dbus_env_$DBUS_SESSION_BUS_PID
+        set -l dbus_env (timeout 2s dbus-launch --auto-syntax); or return
+
+        # Extract and export only the expected variables from dbus-launch output
+        set -l addr (printf '%s\n' $dbus_env | sed -n 's/^DBUS_SESSION_BUS_ADDRESS='\''\(.*\)'\'';$/\1/p')
+        set -l pid_val (printf '%s\n' $dbus_env | sed -n 's/^DBUS_SESSION_BUS_PID=\([0-9][0-9]*\);$/\1/p')
+
+        if test -n "$addr"; and test -n "$pid_val"
+            set -gx DBUS_SESSION_BUS_ADDRESS "$addr"
+            set -gx DBUS_SESSION_BUS_PID "$pid_val"
+
+            set -l dbus_env_file "$dbus_env_dir/dbus_env_$DBUS_SESSION_BUS_PID"
+            printf "DBUS_SESSION_BUS_ADDRESS='%s'\n" "$DBUS_SESSION_BUS_ADDRESS" > "$dbus_env_file"
+            printf "DBUS_SESSION_BUS_PID='%s'\n" "$DBUS_SESSION_BUS_PID" >> "$dbus_env_file"
+            chmod 600 "$dbus_env_file" 2>/dev/null; or true
+        end
     else
-        eval (cat /tmp/dbus_env_$dbus_pid)
+        # Reuse existing dbus session
+        set -l dbus_env_file "$dbus_env_dir/dbus_env_$dbus_pid"
+        if test -f "$dbus_env_file"
+            set -l addr (sed -n 's/^DBUS_SESSION_BUS_ADDRESS='\''\(.*\)'\''$/\1/p' "$dbus_env_file")
+            set -l pid_val (sed -n 's/^DBUS_SESSION_BUS_PID='\''\([0-9][0-9]*\)'\''$/\1/p' "$dbus_env_file")
+            if test -n "$addr"; and test -n "$pid_val"
+                set -gx DBUS_SESSION_BUS_ADDRESS "$addr"
+                set -gx DBUS_SESSION_BUS_PID "$pid_val"
+            end
+        end
     end
 end
 
 # invoke
+define_xdg_environment
 setup_display
-setup_dbus
+
+if test -z "$SYSTEMD_PID"; and test -z "$DBUS_SESSION_BUS_ADDRESS"
+    setup_dbus
+end
 
 ### ————————————————————————————————
 ### 4. Aliases & tweaks
@@ -172,7 +281,7 @@ end
 
 if test -z "$SYSTEMD_PID"
     save_environment
-else if test $SYSTEMD_PID -eq 1; and test -f $systemd_saved_environment; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
+else if test "$SYSTEMD_PID" -eq 1; and test -f $systemd_saved_environment; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
     load_env_file $systemd_saved_environment
     setup_interop
 end
