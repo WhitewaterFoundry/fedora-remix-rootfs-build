@@ -108,11 +108,11 @@ function setup_display
             set ipconfig_exec (command -v ipconfig.exe)
         end
 
-        set -l gw_line ( $ipconfig_exec 2>/dev/null | grep -n -m1 'Default Gateway.*: [0-9a-fA-F]' | cut -d: -f1 )
+        set -l gw_line ( $ipconfig_exec 2>/dev/null | grep -a -n -m1 'Default Gateway.*: [0-9a-fA-F]' | cut -d: -f1 )
         if test -n "$gw_line"
             set -l start (math $gw_line - 4)
             set -l end   $gw_line
-            set -l wsl2_ip ( $ipconfig_exec | sed "$start,$end!d" | grep IPv4 | cut -d: -f2 | tr -d ' \r' )
+            set -l wsl2_ip ( $ipconfig_exec | sed "$start,$end!d" | grep -a IPv4 | cut -d: -f2 | tr -d ' \r' )
         else
             set -l wsl2_ip (grep -m1 nameserver /etc/resolv.conf | awk '{print $2}')
         end
