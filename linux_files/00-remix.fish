@@ -281,8 +281,8 @@ end
 
 if test -z "$SYSTEMD_PID"
     save_environment
-else if test "$SYSTEMD_PID" -eq 1; and test -f $systemd_saved_environment; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
-    load_env_file $systemd_saved_environment
+else if test "$SYSTEMD_PID" -eq 1; and test -f "$systemd_saved_environment"; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
+    load_env_file "$systemd_saved_environment"
     setup_interop
 end
 
