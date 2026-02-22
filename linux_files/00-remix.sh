@@ -134,7 +134,7 @@ setup_display() {
       route_exec="${route_exec_path}"
     fi
 
-    wsl2_d_tmp="$(eval "$route_exec print 2> /dev/null" | grep 0.0.0.0 | head -1 | awk '{print $4}')"
+    wsl2_d_tmp="$(eval "$route_exec print 2> /dev/null" | grep -a 0.0.0.0 | head -1 | awk '{print $4}')"
 
     if [ -n "${wsl2_d_tmp}" ]; then
       export DISPLAY="${wsl2_d_tmp}":0
