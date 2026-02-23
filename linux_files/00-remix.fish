@@ -182,7 +182,11 @@ function setup_display
         end
 
         # enable external x display for WSL 2
-        set -l route_exec (wslpath 'C:\Windows\system32\route.exe')
+        if command -v wslpath > /dev/null 2>&1
+            set -l route_exec (wslpath 'C:\Windows\system32\route.exe')
+        else
+            set -l route_exec '/mnt/c/Windows/system32/route.exe'
+        end
 
         if set -l route_exec_path (command -v route.exe 2>/dev/null)
             set route_exec "$route_exec_path"
@@ -289,7 +293,7 @@ end
 ### ————————————————————————————————
 ### 6. Windows‐home symlink
 
-if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1
+if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1; and command -v wslpath > /dev/null 2>&1
     set -l wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
     if test (string length $wHomeWinPath) -le 3
         set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' 2>/dev/null | tr -d '\r')

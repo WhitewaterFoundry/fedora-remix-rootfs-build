@@ -128,7 +128,11 @@ setup_display() {
     fi
 
     # enable external x display for WSL 2
-    route_exec=$(wslpath 'C:\Windows\system32\route.exe')
+    if command -v wslpath > /dev/null 2>&1; then
+      route_exec=$(wslpath 'C:\Windows\system32\route.exe')
+    else
+      route_exec='/mnt/c/Windows/system32/route.exe'
+    fi
 
     if route_exec_path=$(command -v route.exe 2>/dev/null); then
       route_exec="${route_exec_path}"
@@ -262,7 +266,7 @@ main() {
   fi
 
   # Check if we have Windows Path
-  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
+  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1) && (command -v wslpath >/dev/null 2>&1); then
 
     # Create a symbolic link to the window's home
 
