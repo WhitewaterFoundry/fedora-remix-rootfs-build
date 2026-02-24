@@ -182,11 +182,7 @@ function setup_display
         end
 
         # enable external x display for WSL 2
-        if command -v wslpath > /dev/null 2>&1
-            set -l route_exec (wslpath 'C:\Windows\system32\route.exe')
-        else
-            set -l route_exec '/mnt/c/Windows/system32/route.exe'
-        end
+        set -l route_exec (wslpath 'C:\Windows\system32\route.exe')
 
         if set -l route_exec_path (command -v route.exe 2>/dev/null)
             set route_exec "$route_exec_path"
