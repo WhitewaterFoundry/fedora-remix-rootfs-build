@@ -289,7 +289,7 @@ end
 ### ————————————————————————————————
 ### 6. Windows‐home symlink
 
-if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1
+if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1; and command -v wslpath > /dev/null 2>&1
     set -l wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
     if test (string length $wHomeWinPath) -le 3
         set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' 2>/dev/null | tr -d '\r')

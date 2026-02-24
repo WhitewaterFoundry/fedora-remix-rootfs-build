@@ -262,7 +262,7 @@ main() {
   fi
 
   # Check if we have Windows Path
-  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
+  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1) && (command -v wslpath >/dev/null 2>&1); then
 
     # Create a symbolic link to the window's home
 
