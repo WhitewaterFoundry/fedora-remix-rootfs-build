@@ -164,7 +164,7 @@ dnf update --refresh
 EOF
 
   echo "##[section] 'Install MESA"
-  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42')
+  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.5-1_wsl.fc43')
   local i=$((${#mesa_version[@]} - 1))
   systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
@@ -238,7 +238,7 @@ function main() {
 
   mkdir -p "${TMPDIR}"
 
-  version_id=${3:-42}
+  version_id=${3:-43}
   # shellcheck source=linux_files/os-release-39
   source "linux_files/os-release-${version_id}"
 
