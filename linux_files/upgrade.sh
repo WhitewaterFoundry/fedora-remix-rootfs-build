@@ -31,7 +31,10 @@ PY
 
 function rpm_ver_lt() {
   # rpm_ver_lt <a> <b>  => true if a < b (rpm semantics)
-  rpmdev-vercmp "$1" "$2" >/dev/null 2>&1 && [[ $? -eq 12 ]]
+  local result
+  rpmdev-vercmp "$1" "$2" >/dev/null 2>&1
+  result=$?
+  [[ $result -eq 12 ]]
 }
 
 function fix_wsl1() {
@@ -98,9 +101,16 @@ function ensure_wsl1_pixbuf_compat() {
 
   # Get installed gdk-pixbuf2 version-release
   local pixbuf_vr
-  pixbuf_vr="$(rpm -q --qf '%{VERSION}-%{RELEASE}\n' gdk-pixbuf2 2>/dev/null || true)"
+  pixbuf_vr="$(rpm -q --qf '%{VERSION}-%{RELEASE}\n' gdk-pixbuf2 2>/dev/null)"
+  local rpm_rc=$?
 
-  # If not installed, just install the pinned compatible version from WhitewaterFoundry repo
+  # Exit codes: 0 = installed, 1 = not installed, >1 = query error
+  if [[ ${rpm_rc} -ne 0 && ${rpm_rc} -ne 1 ]]; then
+    echo "Error: rpm query for gdk-pixbuf2 failed with status ${rpm_rc}. Aborting WSL1 pixbuf compatibility changes." >&2
+    return "${rpm_rc}"
+  fi
+
+  # If not installed (empty pixbuf_vr), just install the pinned compatible version from WhitewaterFoundry repo
   if [[ -z "${pixbuf_vr}" ]]; then
     # Assumption: WhitewaterFoundry repo provides gdk-pixbuf2-2.42.* for fc43
     dnf_install --allowerasing gdk-pixbuf2-2.42\*
@@ -116,8 +126,8 @@ function ensure_wsl1_pixbuf_compat() {
 
   # Version lock to prevent drift during future updates
   dnf_install 'dnf-command(versionlock)'
-  sudo dnf versionlock add gdk-pixbuf2\* >/dev/null 2>&1 || true
-  sudo dnf versionlock add glycin\* >/dev/null 2>&1 || true
+  sudo dnf versionlock add gdk-pixbuf2 >/dev/null 2>&1 || true
+  sudo dnf versionlock add glycin-loaders glycin-libs glycin-thumbnailer glycin >/dev/null 2>&1 || true
 
   # Optional: refresh loaders cache if present; non-fatal if missing
   if command -v gdk-pixbuf-query-loaders >/dev/null 2>&1; then
