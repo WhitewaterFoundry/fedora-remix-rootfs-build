@@ -51,7 +51,7 @@ function fix_wsl1() {
 
 function dnf_install() {
   if is_wsl1; then
-    sudo dnf -y install --nogpgcheck "$@"
+    sudo dnf -y install --nogpgcheck --no-best "$@"
   else
     sudo dnf -y install "$@"
   fi
@@ -59,7 +59,7 @@ function dnf_install() {
 
 function dnf_update() {
   if is_wsl1; then
-    sudo dnf -y update --nogpgcheck "$@"
+    sudo dnf -y update --nogpgcheck --no-best "$@"
   else
     sudo dnf -y update "$@"
   fi
