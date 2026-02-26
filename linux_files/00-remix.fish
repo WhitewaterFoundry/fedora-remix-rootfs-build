@@ -301,3 +301,57 @@ if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1; and command -v 
         ln -sf $WIN_HOME $win_home_lnk > /dev/null 2>&1
     end
 end
+
+### ————————————————————————————————
+### 7. First‐run welcome message
+
+function show_welcome_message
+    set -l welcome_marker "$HOME/.fedora_remix_welcome_shown"
+
+    # Only show in interactive shells to avoid breaking scripts/automation
+    status is-interactive; or return
+
+    if test -f "$welcome_marker"
+        return
+    end
+
+    set -l remix_version ""
+    if test -f /etc/os-release
+        set remix_version (sed -n 's/^FEDORA_REMIX_VERSION=//p' /etc/os-release | tr -d '"')
+        if test -z "$remix_version"
+            set remix_version (sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d '"')
+        end
+    end
+
+    echo ""
+    if test -n "$remix_version"
+        echo "Welcome to Fedora Remix for WSL ($remix_version)"
+    else
+        echo "Welcome to Fedora Remix for WSL"
+    end
+    echo ""
+    echo " * Support:        https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/issues"
+    echo ""
+    echo "Before running 'dnf update', please run 'update.sh' at least once to update"
+    echo "the custom scripts that ship with Fedora Remix for WSL. It is recommended to"
+    echo "run 'update.sh' regularly to keep these scripts up to date."
+    echo ""
+
+    if test -z "$WSL2"
+        echo "*** WSL1 detected ***"
+        echo "Please run 'update.sh' immediately to configure the distro for WSL1."
+        echo "By default, Fedora Remix is configured for WSL2. Running 'update.sh' will"
+        echo "apply the necessary patches. If you see errors installing packages such as"
+        echo "\"Error in sysusers scriptlet\", 'update.sh' includes fixes for that."
+        echo ""
+    end
+
+    echo "Visit https://www.whitewaterfoundry.com for info, updates and upgrade"
+    echo "instructions. Subscribe to the newsletter to be notified when a major"
+    echo "update is released."
+    echo ""
+
+    touch "$welcome_marker" 2>/dev/null; or true
+end
+
+show_welcome_message
