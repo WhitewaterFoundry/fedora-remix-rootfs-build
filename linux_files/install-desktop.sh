@@ -466,6 +466,8 @@ function check_wsl2() {
 # Terminate WSL distribution
 function terminate_wsl_distribution() {
   if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+    # Save shell history before terminating WSL to prevent history loss
+    history -a 2>/dev/null || true
     wsl.exe --terminate "${WSL_DISTRO_NAME}"
   else
     echo "Warning: WSL_DISTRO_NAME not set, skipping WSL termination" >&2
