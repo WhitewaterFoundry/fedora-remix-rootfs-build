@@ -222,7 +222,7 @@ show_welcome_message() {
     return
   fi
 
-  remix_version="${FEDORA_REMIX_VERSION:-$(awk -F= '$1=="VERSION_ID"{gsub(/"/,"",$2); print $2}' /etc/os-release 2>/dev/null)}"
+  remix_version="${FEDORA_REMIX_VERSION:-$(awk -F= '$1=="FEDORA_REMIX_VERSION"{gsub(/"/,"",$2); print $2}' /etc/os-release 2>/dev/null)}"
 
   echo ""
   echo "Welcome to Fedora Remix for WSL${remix_version:+ ($remix_version)}"
