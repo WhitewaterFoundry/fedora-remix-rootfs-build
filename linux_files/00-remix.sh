@@ -209,6 +209,50 @@ setup_dbus() {
   unset dbus_env_dir
 }
 
+show_welcome_message() {
+  welcome_marker="${HOME}/.fedora_remix_welcome_shown"
+
+  if [ -f "${welcome_marker}" ]; then
+    return
+  fi
+
+  # shellcheck disable=SC1091
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+  fi
+
+  remix_version="${FEDORA_REMIX_VERSION:-${VERSION_ID:-}}"
+
+  echo ""
+  echo "Welcome to Fedora Remix for WSL${remix_version:+ ($remix_version)}"
+  echo ""
+  echo " * Support:        https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/issues"
+  echo ""
+  echo "Before running 'dnf update', please run 'update.sh' at least once to update"
+  echo "the custom scripts that ship with Fedora Remix for WSL. It is recommended to"
+  echo "run 'update.sh' regularly to keep these scripts up to date."
+  echo ""
+
+  if [ -z "${WSL2:-}" ]; then
+    echo "*** WSL1 detected ***"
+    echo "Please run 'update.sh' immediately to configure the distro for WSL1."
+    echo "By default, Fedora Remix is configured for WSL2. Running 'update.sh' will"
+    echo "apply the necessary patches. If you see errors installing packages such as"
+    echo "\"Error in sysusers scriptlet\", 'update.sh' includes fixes for that."
+    echo ""
+  fi
+
+  echo "Visit https://www.whitewaterfoundry.com for info, updates and upgrade"
+  echo "instructions. Subscribe to the newsletter to be notified when a major"
+  echo "update is released."
+  echo ""
+
+  touch "${welcome_marker}" 2>/dev/null || true
+
+  unset welcome_marker
+  unset remix_version
+}
+
 main() {
   # Only the default WSL user should run this script
   if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
@@ -287,50 +331,6 @@ main() {
   unset systemd_saved_environment
 
   show_welcome_message
-}
-
-show_welcome_message() {
-  welcome_marker="${HOME}/.fedora_remix_welcome_shown"
-
-  if [ -f "${welcome_marker}" ]; then
-    return
-  fi
-
-  # shellcheck disable=SC1091
-  if [ -f /etc/os-release ]; then
-    . /etc/os-release
-  fi
-
-  remix_version="${FEDORA_REMIX_VERSION:-${VERSION_ID:-}}"
-
-  echo ""
-  echo "Welcome to Fedora Remix for WSL${remix_version:+ ($remix_version)}"
-  echo ""
-  echo " * Support:        https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/issues"
-  echo ""
-  echo "Before running 'dnf update', please run 'update.sh' at least once to update"
-  echo "the custom scripts that ship with Fedora Remix for WSL. It is recommended to"
-  echo "run 'update.sh' regularly to keep these scripts up to date."
-  echo ""
-
-  if [ -z "${WSL2:-}" ]; then
-    echo "*** WSL1 detected ***"
-    echo "Please run 'update.sh' immediately to configure the distro for WSL1."
-    echo "By default, Fedora Remix is configured for WSL2. Running 'update.sh' will"
-    echo "apply the necessary patches. If you see errors installing packages such as"
-    echo "\"Error in sysusers scriptlet\", 'update.sh' includes fixes for that."
-    echo ""
-  fi
-
-  echo "Visit https://www.whitewaterfoundry.com for info, updates and upgrade"
-  echo "instructions. Subscribe to the newsletter to be notified when a major"
-  echo "update is released."
-  echo ""
-
-  touch "${welcome_marker}" 2>/dev/null || true
-
-  unset welcome_marker
-  unset remix_version
 }
 
 main "$@"
