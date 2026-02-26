@@ -210,18 +210,19 @@ setup_dbus() {
 }
 
 show_welcome_message() {
+  # Only show in interactive shells to avoid breaking scripts/automation
+  case "$-" in
+    *i*) ;;
+    *) return ;;
+  esac
+
   welcome_marker="${HOME}/.fedora_remix_welcome_shown"
 
   if [ -f "${welcome_marker}" ]; then
     return
   fi
 
-  # shellcheck disable=SC1091
-  if [ -f /etc/os-release ]; then
-    . /etc/os-release
-  fi
-
-  remix_version="${FEDORA_REMIX_VERSION:-${VERSION_ID:-}}"
+  remix_version="${FEDORA_REMIX_VERSION:-$(awk -F= '$1=="VERSION_ID"{gsub(/"/,"",$2); print $2}' /etc/os-release 2>/dev/null)}"
 
   echo ""
   echo "Welcome to Fedora Remix for WSL${remix_version:+ ($remix_version)}"

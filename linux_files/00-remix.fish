@@ -308,6 +308,9 @@ end
 function show_welcome_message
     set -l welcome_marker "$HOME/.fedora_remix_welcome_shown"
 
+    # Only show in interactive shells to avoid breaking scripts/automation
+    status is-interactive; or return
+
     if test -f "$welcome_marker"
         return
     end
