@@ -122,7 +122,15 @@ function ensure_wsl1_pixbuf_compat() {
   fi
 
   # Remove glycin stack if present (it triggers memfd usage paths)
-  sudo dnf -y remove glycin-loaders glycin-libs glycin-thumbnailer glycin || true
+  local -a glycin_installed=()
+  for pkg in glycin-loaders glycin-libs glycin-thumbnailer glycin; do
+    if rpm -q "$pkg" >/dev/null 2>&1; then
+      glycin_installed+=("$pkg")
+    fi
+  done
+  if [[ ${#glycin_installed[@]} -gt 0 ]]; then
+    sudo dnf -y remove "${glycin_installed[@]}" || true
+  fi
 
   # Version lock to prevent drift during future updates
   dnf_install 'dnf-command(versionlock)'
