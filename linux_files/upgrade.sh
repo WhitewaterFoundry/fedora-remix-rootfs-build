@@ -193,7 +193,7 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 source /etc/os-release
 
 if [[ "$(uname -m)" == "x86_64" ]]; then
-  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.5-1_wsl.fc43')
+  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43')
   declare -a target_version=('40' '41' '42' '43')
   declare -i length=${#mesa_version[@]}
 
