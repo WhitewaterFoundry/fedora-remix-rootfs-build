@@ -200,7 +200,7 @@ if [[ "$(uname -m)" == "x86_64" ]]; then
   for ((i = 0; i < length; i++)); do
     if [[ ${VERSION_ID} -eq ${target_version[i]} && $(sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}") == 0 ]]; then
 
-      sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-libEGL mesa-libgbm mesa-vulkan-drivers
+      sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
       curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
       dnf_install --allowerasing mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils libva-utils
       sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-libEGL mesa-libgbm mesa-vulkan-drivers
