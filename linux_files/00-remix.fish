@@ -307,12 +307,18 @@ end
 
 function show_welcome_message
     set -l welcome_marker "$HOME/.fedora_remix_welcome_shown"
+    set -l welcome_count 0
 
     # Only show in interactive shells to avoid breaking scripts/automation
     status is-interactive; or return
 
     if test -f "$welcome_marker"
-        return
+        set welcome_count (cat "$welcome_marker" 2>/dev/null | string trim)
+        # Ensure numeric
+        set welcome_count (math "$welcome_count + 0" 2>/dev/null; or echo 0)
+        if test "$welcome_count" -ge 5
+            return
+        end
     end
 
     set -l remix_version ""
@@ -351,7 +357,8 @@ function show_welcome_message
     echo "update is released."
     echo ""
 
-    touch "$welcome_marker" 2>/dev/null; or true
+    set welcome_count (math "$welcome_count + 1")
+    echo "$welcome_count" > "$welcome_marker" 2>/dev/null; or true
 end
 
 show_welcome_message
