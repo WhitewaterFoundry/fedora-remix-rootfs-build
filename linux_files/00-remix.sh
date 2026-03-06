@@ -217,9 +217,14 @@ show_welcome_message() {
   esac
 
   welcome_marker="${HOME}/.fedora_remix_welcome_shown"
+  welcome_count=0
 
   if [ -f "${welcome_marker}" ]; then
-    return
+    welcome_count=$(cat "${welcome_marker}" 2>/dev/null)
+    welcome_count=$((welcome_count + 0))  # ensure numeric
+    if [ "${welcome_count}" -ge 5 ]; then
+      return
+    fi
   fi
 
   remix_version="${FEDORA_REMIX_VERSION:-$(awk -F= '$1=="FEDORA_REMIX_VERSION"{gsub(/"/,"",$2); print $2}' /etc/os-release 2>/dev/null)}"
@@ -248,9 +253,11 @@ show_welcome_message() {
   echo "update is released."
   echo ""
 
-  touch "${welcome_marker}" 2>/dev/null || true
+  welcome_count=$((welcome_count + 1))
+  echo "${welcome_count}" > "${welcome_marker}" 2>/dev/null || true
 
   unset welcome_marker
+  unset welcome_count
   unset remix_version
 }
 
