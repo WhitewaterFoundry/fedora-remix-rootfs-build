@@ -313,7 +313,7 @@ function show_welcome_message
     status is-interactive; or return
 
     if test -f "$welcome_marker"
-        set welcome_count (cat "$welcome_marker" 2>/dev/null | string trim; or echo 0)
+        set welcome_count (cat "$welcome_marker" 2>/dev/null | string trim)
         # Ensure numeric
         set welcome_count (math "$welcome_count + 0" 2>/dev/null; or echo 0)
         if test "$welcome_count" -ge 5

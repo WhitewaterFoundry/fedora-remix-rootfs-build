@@ -221,8 +221,14 @@ show_welcome_message() {
 
   if [ -f "${welcome_marker}" ]; then
     welcome_count=$(cat "${welcome_marker}" 2>/dev/null)
-    welcome_count=$((welcome_count + 0))  # ensure numeric
+    case "$welcome_count" in
+      ''|*[!0-9]*)
+        welcome_count=0
+        ;;
+    esac
     if [ "${welcome_count}" -ge 5 ]; then
+      unset welcome_marker
+      unset welcome_count
       return
     fi
   fi
