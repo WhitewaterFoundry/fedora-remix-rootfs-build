@@ -12,8 +12,33 @@ if [[ ! -L /usr/local/bin/update.sh ]]; then
   sudo ln -s /usr/local/bin/upgrade.sh /usr/local/bin/update.sh
 fi
 
+# ----------------------------
+# WSL detection helpers
+# ----------------------------
+function is_wsl1() {
+  # Existing convention in this script: WSL2 env var empty => WSL1
+  [[ -z "${WSL2:-}" ]]
+}
+
+function has_memfd() {
+  # Fast capability check: returns 0 if memfd_create exists, non-zero otherwise
+  python3 - <<'PY' >/dev/null 2>&1
+import os
+fd = os.memfd_create("t")
+os.close(fd)
+PY
+}
+
+function rpm_ver_lt() {
+  # rpm_ver_lt <a> <b>  => true if a < b (rpm semantics)
+  local result
+  rpmdev-vercmp "$1" "$2" >/dev/null 2>&1
+  result=$?
+  [[ $result -eq 12 ]]
+}
+
 function fix_wsl1() {
-  if [[ -z ${WSL2} ]]; then
+  if is_wsl1; then
     sudo rm -f /var/lib/rpm/.rpm.lock
     # If WSL1 fix systemd upgrades
     if pushd /bin >/dev/null; then
@@ -25,25 +50,109 @@ function fix_wsl1() {
 }
 
 function dnf_install() {
-  if [[ -z ${WSL2} ]]; then
-    sudo dnf -y install --nogpgcheck "$@"
+  if is_wsl1; then
+    sudo dnf -y install --nogpgcheck --no-best "$@"
   else
     sudo dnf -y install "$@"
   fi
 }
 
 function dnf_update() {
-  if [[ -z ${WSL2} ]]; then
-    sudo dnf -y update --nogpgcheck "$@"
+  if is_wsl1; then
+    sudo dnf -y update --nogpgcheck --no-best "$@"
   else
     sudo dnf -y update "$@"
   fi
 }
 
+function dnf_downgrade() {
+  if is_wsl1; then
+    sudo dnf -y downgrade --nogpgcheck "$@"
+  else
+    sudo dnf -y downgrade "$@"
+  fi
+}
+
+# ----------------------------
+# WSL1 Pixbuf/Glycin workaround
+# ----------------------------
+function ensure_wsl1_pixbuf_compat() {
+  source /etc/os-release || return 0
+
+  # Only relevant for WSL1 + Fedora 43 where gdk-pixbuf 2.44 pulls glycin stack
+  if ! is_wsl1; then
+    return 0
+  fi
+
+  # If memfd exists, no need to do anything (future-proof)
+  if has_memfd; then
+    return 0
+  fi
+
+  # Scope guard: only enforce on Fedora 43 (expand to >=43 if needed)
+  if [[ "${VERSION_ID}" != "43" ]]; then
+    return 0
+  fi
+
+  # Ensure version comparison tooling exists
+  if ! command -v rpmdev-vercmp >/dev/null 2>&1; then
+    dnf_install rpmdevtools
+  fi
+
+  # Get installed gdk-pixbuf2 version-release
+  local pixbuf_vr
+  pixbuf_vr="$(rpm -q --qf '%{VERSION}-%{RELEASE}\n' gdk-pixbuf2 2>/dev/null)"
+  local rpm_rc=$?
+
+  # Exit codes: 0 = installed, 1 = not installed, >1 = query error
+  if [[ ${rpm_rc} -ne 0 && ${rpm_rc} -ne 1 ]]; then
+    echo "Error: rpm query for gdk-pixbuf2 failed with status ${rpm_rc}. Aborting WSL1 pixbuf compatibility changes." >&2
+    return "${rpm_rc}"
+  fi
+
+  # If not installed (empty pixbuf_vr), just install the pinned compatible version from WhitewaterFoundry repo
+  if [[ -z "${pixbuf_vr}" ]]; then
+    # Assumption: WhitewaterFoundry repo provides gdk-pixbuf2-2.42.* for fc43
+    dnf_install --allowerasing gdk-pixbuf2-2.42\*
+  else
+    # If installed >= 2.44.0, downgrade to 2.42.* from WhitewaterFoundry repo
+    if ! rpm_ver_lt "${pixbuf_vr}" "2.44.0-0"; then
+      dnf_downgrade --allowerasing gdk-pixbuf2-2.42\*
+    fi
+  fi
+
+  # Remove glycin stack if present (it triggers memfd usage paths)
+  local -a glycin_installed=()
+  for pkg in glycin-loaders glycin-libs glycin-thumbnailer glycin; do
+    if rpm -q "$pkg" >/dev/null 2>&1; then
+      glycin_installed+=("$pkg")
+    fi
+  done
+  if [[ ${#glycin_installed[@]} -gt 0 ]]; then
+    sudo dnf -y remove "${glycin_installed[@]}" || true
+  fi
+
+  # Version lock to prevent drift during future updates
+  dnf_install 'dnf-command(versionlock)'
+  sudo dnf versionlock add gdk-pixbuf2 >/dev/null 2>&1 || true
+  sudo dnf versionlock add glycin-loaders glycin-libs glycin-thumbnailer glycin >/dev/null 2>&1 || true
+
+  # Optional: refresh loaders cache if present; non-fatal if missing
+  if command -v gdk-pixbuf-query-loaders >/dev/null 2>&1; then
+    sudo gdk-pixbuf-query-loaders --update-cache >/dev/null 2>&1 || true
+  fi
+}
+
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
 fix_wsl1
+
+# Run compat enforcement BEFORE and AFTER update:
+ensure_wsl1_pixbuf_compat
+
 dnf_update
 fix_wsl1
+
+ensure_wsl1_pixbuf_compat
 
 # Remove old COPR wslu repositories for all Fedora versions
 copr_found=false
@@ -91,19 +200,23 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 # Install mesa
 source /etc/os-release
 
-declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42')
-declare -a target_version=('40' '41' '42')
-declare -i length=${#mesa_version[@]}
+if [[ "$(uname -m)" == "x86_64" ]]; then
+  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43')
+  declare -a target_version=('40' '41' '42' '43')
+  declare -i length=${#mesa_version[@]}
 
-for ((i = 0; i < length; i++)); do
-  if [[ ${VERSION_ID} -eq ${target_version[i]} && $(sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}") == 0 ]]; then
+  for ((i = 0; i < length; i++)); do
+    if [[ ${VERSION_ID} -eq ${target_version[i]} && $(sudo dnf info --installed mesa-libGL | grep -c "${mesa_version[i]}") == 0 ]]; then
 
-    sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
-    curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
-    dnf_install --allowerasing mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-vdpau-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-libxatracker-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils vdpauinfo libva-utils
-    sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
-  fi
-done
+      sudo dnf versionlock delete mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-vdpau-drivers mesa-libEGL mesa-libgbm mesa-libxatracker mesa-vulkan-drivers
+      curl -s https://packagecloud.io/install/repositories/whitewaterfoundry/fedoraremix/script.rpm.sh | sudo env os=fedora dist="${VERSION_ID}" bash
+      dnf_install --allowerasing mesa-dri-drivers-"${mesa_version[i]}" mesa-libGL-"${mesa_version[i]}" mesa-va-drivers-"${mesa_version[i]}" mesa-libEGL-"${mesa_version[i]}" mesa-libgbm-"${mesa_version[i]}" mesa-vulkan-drivers-"${mesa_version[i]}" glx-utils libva-utils
+      sudo dnf versionlock add mesa-dri-drivers mesa-libGL mesa-filesystem mesa-libglapi mesa-va-drivers mesa-libEGL mesa-libgbm mesa-vulkan-drivers
+    fi
+  done
+else
+  dnf_install --allowerasing mesa-dri-drivers mesa-libGL mesa-va-drivers mesa-libEGL mesa-libgbm mesa-vulkan-drivers glx-utils libva-utils
+fi
 
 if [[ $(id | grep -c video) == 0 ]]; then
   sudo /usr/sbin/groupadd -g 44 wsl-video

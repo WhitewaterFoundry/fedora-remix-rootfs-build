@@ -214,7 +214,7 @@ function get_desktop_choice() {
   if ! desktop_choice=$(whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
     --title "Desktop Selection" --radiolist --separate-output \
     "Choose your desired Desktop Environment\n[SPACE to select, ENTER to confirm]:" \
-    12 45 4 \
+    12 45 3 \
     "GNOME" "GNOME Desktop Environment   " on \
     "KDE" "KDE Plasma Desktop" off \
     "Xfce" "XFCE 4 Desktop" off \
@@ -393,17 +393,17 @@ function configure_rdp_settings() {
 # Mask conflicting systemd services
 function mask_conflicting_services() {
   echo "Masking conflicting services..."
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-resolved.service; then
     echo "Error: Failed to mask systemd-resolved.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-networkd.service; then
     echo "Error: Failed to mask systemd-networkd.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/NetworkManager.service; then
     echo "Error: Failed to mask NetworkManager.service" >&2
     return 1
@@ -413,32 +413,32 @@ function mask_conflicting_services() {
     echo "Error: Failed to mask NetworkManager-wait-online.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup.service; then
     echo "Error: Failed to mask systemd-tmpfiles-setup.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.service; then
     echo "Error: Failed to mask systemd-tmpfiles-clean.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-clean.timer; then
     echo "Error: Failed to mask systemd-tmpfiles-clean.timer" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev-early.service; then
     echo "Error: Failed to mask systemd-tmpfiles-setup-dev-early.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/systemd-tmpfiles-setup-dev.service; then
     echo "Error: Failed to mask systemd-tmpfiles-setup-dev.service" >&2
     return 1
   fi
-  
+
   if ! sudo ln -sf /dev/null /etc/systemd/system/tmp.mount; then
     echo "Error: Failed to mask tmp.mount" >&2
     return 1
@@ -466,6 +466,8 @@ function check_wsl2() {
 # Terminate WSL distribution
 function terminate_wsl_distribution() {
   if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+    # Save shell history before terminating WSL to prevent history loss
+    history -a 2>/dev/null || true
     wsl.exe --terminate "${WSL_DISTRO_NAME}"
   else
     echo "Warning: WSL_DISTRO_NAME not set, skipping WSL termination" >&2
@@ -513,7 +515,7 @@ function main() {
 
   install_rdp_services || return 1
   configure_rdp_settings "${rdp_port}" "${listen_port}" || return 1
-  
+
   # Mask conflicting services for WSL
   mask_conflicting_services || return 1
 

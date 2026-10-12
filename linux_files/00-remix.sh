@@ -134,7 +134,7 @@ setup_display() {
       route_exec="${route_exec_path}"
     fi
 
-    wsl2_d_tmp="$(eval "$route_exec print 2> /dev/null" | grep 0.0.0.0 | head -1 | awk '{print $4}')"
+    wsl2_d_tmp="$(eval "$route_exec print 2> /dev/null" | grep -a 0.0.0.0 | head -1 | awk '{print $4}')"
 
     if [ -n "${wsl2_d_tmp}" ]; then
       export DISPLAY="${wsl2_d_tmp}":0
@@ -209,6 +209,64 @@ setup_dbus() {
   unset dbus_env_dir
 }
 
+show_welcome_message() {
+  # Only show in interactive shells to avoid breaking scripts/automation
+  case "$-" in
+    *i*) ;;
+    *) return ;;
+  esac
+
+  welcome_marker="${HOME}/.fedora_remix_welcome_shown"
+  welcome_count=0
+
+  if [ -f "${welcome_marker}" ]; then
+    welcome_count=$(cat "${welcome_marker}" 2>/dev/null)
+    case "$welcome_count" in
+      ''|*[!0-9]*)
+        welcome_count=0
+        ;;
+    esac
+    if [ "${welcome_count}" -ge 5 ]; then
+      unset welcome_marker
+      unset welcome_count
+      return
+    fi
+  fi
+
+  remix_version="${FEDORA_REMIX_VERSION:-$(awk -F= '$1=="FEDORA_REMIX_VERSION"{gsub(/"/,"",$2); print $2}' /etc/os-release 2>/dev/null)}"
+
+  echo ""
+  echo "Welcome to Fedora Remix for WSL${remix_version:+ ($remix_version)}"
+  echo ""
+  echo " * Support:        https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/issues"
+  echo ""
+  echo "Before running 'dnf update', please run 'update.sh' at least once to update"
+  echo "the custom scripts that ship with Fedora Remix for WSL. It is recommended to"
+  echo "run 'update.sh' regularly to keep these scripts up to date."
+  echo ""
+
+  if [ -z "${WSL2:-}" ]; then
+    echo "*** WSL1 detected ***"
+    echo "Please run 'update.sh' immediately to configure the distro for WSL1."
+    echo "By default, Fedora Remix is configured for WSL2. Running 'update.sh' will"
+    echo "apply the necessary patches. If you see errors installing packages such as"
+    echo "\"Error in sysusers scriptlet\", 'update.sh' includes fixes for that."
+    echo ""
+  fi
+
+  echo "Visit https://www.whitewaterfoundry.com for info, updates and upgrade"
+  echo "instructions. Subscribe to the newsletter to be notified when a major"
+  echo "update is released."
+  echo ""
+
+  welcome_count=$((welcome_count + 1))
+  echo "${welcome_count}" > "${welcome_marker}" 2>/dev/null || true
+
+  unset welcome_marker
+  unset welcome_count
+  unset remix_version
+}
+
 main() {
   # Only the default WSL user should run this script
   if ! (id -Gn | grep -c "adm.*wheel\|wheel.*adm" >/dev/null); then
@@ -262,7 +320,7 @@ main() {
   fi
 
   # Check if we have Windows Path
-  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1); then
+  if [ -z "$WIN_HOME" ] && (command -v cmd.exe >/dev/null 2>&1) && (command -v wslpath >/dev/null 2>&1); then
 
     # Create a symbolic link to the window's home
 
@@ -285,6 +343,8 @@ main() {
     unset win_home_lnk
   fi
   unset systemd_saved_environment
+
+  show_welcome_message
 }
 
 main "$@"

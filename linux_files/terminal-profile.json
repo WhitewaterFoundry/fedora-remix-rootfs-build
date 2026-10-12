@@ -13,7 +13,8 @@
             "fontFace": "Cascadia Code",
             "startingDirectory": "~",
             "showMarksOnScrollbar": true,
-            "autoMarkPrompts": true
+            "autoMarkPrompts": true,
+            "closeOnExit": "never"
         }
     ],
     "schemes": [
@@ -41,4 +42,5 @@
             "yellow": "#A2734C"
         }
     ]
+
 }

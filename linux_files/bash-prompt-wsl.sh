@@ -18,7 +18,11 @@ if [ "$PS1" = "$DEFAULT_PROMPT" ]; then
 fi
 
 export PS0='\[\e]133;C\e\\\]'
-export PS1='\[\e]133;D;$?\e\\\]\[\e]133;A\e\\\]'"${PS1}"'\[\e]9;9;"$(wslpath -w "${PWD}")"\e\\\]\[\e]133;B\e\\\]'
+if command -v wslpath > /dev/null 2>&1; then
+  export PS1='\[\e]133;D;$?\e\\\]\[\e]133;A\e\\\]'"${PS1}"'\[\e]9;9;"$(wslpath -w "${PWD}")"\e\\\]\[\e]133;B\e\\\]'
+else
+  export PS1='\[\e]133;D;$?\e\\\]\[\e]133;A\e\\\]'"${PS1}"'\[\e]133;B\e\\\]'
+fi
 export PS2='> '
 
 unset DEFAULT_PROMPT
