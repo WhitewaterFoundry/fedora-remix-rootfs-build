@@ -566,6 +566,12 @@ Wants=accounts-daemon.service ${X11_UNIX_FIX_SERVICE}
 
 [Service]
 RestartSec=5
+# gdm-headless-login-session passes its environment to the session, like XRDP_SESSION for xrdp
+Environment=GNOME_REMOTE_DESKTOP_SESSION=1
+Environment=XDG_CURRENT_DESKTOP=GNOME
+Environment=DESKTOP_SESSION=gnome
+# GTK 4's Vulkan renderer runs out of memory on Mesa's D3D12 Vulkan driver (dzn)
+Environment=GSK_RENDERER=gl
 EOF
     echo "Error: Failed to configure gnome-headless-session@.service" >&2
     return 1
@@ -686,6 +692,7 @@ Environment=XDG_SESSION_CLASS=user
 Environment=XDG_SESSION_DESKTOP=KDE
 Environment=XDG_CURRENT_DESKTOP=KDE
 Environment=DESKTOP_SESSION=plasma
+Environment=KRDP_SESSION=1
 ExecStart=/bin/sh -c 'export DBUS_SESSION_BUS_ADDRESS="unix:path=\$\${XDG_RUNTIME_DIR}/bus"; exec /usr/bin/startplasma-wayland'
 Restart=on-failure
 RestartSec=5

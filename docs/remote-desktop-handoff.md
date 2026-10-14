@@ -31,7 +31,14 @@ desktops run a **headless session** started by a system unit, and the RDP server
 The template unit has no `[Install]` section, so the script creates the symlink
 `/etc/systemd/system/multi-user.target.wants/gnome-headless-session@<user>.service` itself. It also adds the
 drop-in `/etc/systemd/system/gnome-headless-session@.service.d/wsl.conf`, which orders the unit after
-`systemd-user-sessions`, `accounts-daemon` and `wsl-x11-unix`.
+`systemd-user-sessions`, `accounts-daemon` and `wsl-x11-unix`. Fedora's `gdm-headless-login-session` copies
+the unit's environment into the session, so the drop-in also sets `GNOME_REMOTE_DESKTOP_SESSION=1` (the
+equivalent of xrdp's `XRDP_SESSION`), `XDG_CURRENT_DESKTOP=GNOME`, `DESKTOP_SESSION=gnome` and `GSK_RENDERER=gl`. The last one makes GTK 4 apps use the OpenGL renderer, because the Vulkan renderer
+fails with an out-of-memory error on Mesa's D3D12 Vulkan driver (dzn). **Verified.** GTK still prints
+`MESA-EGL` and dzn warnings at startup; they are harmless. Stock Fedora 44 Mesa already includes d3d12 and
+dzn, so the WSL Mesa build isn't needed for this. It does not set
+`PAM_RHOST`, so `loginctl` reports `Remote=no` and cannot be used for detection. The KDE unit sets
+`KRDP_SESSION=1` for the same purpose.
 
 ### KDE
 
