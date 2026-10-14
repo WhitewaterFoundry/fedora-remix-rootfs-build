@@ -79,7 +79,7 @@ function dnf_downgrade() {
 function ensure_wsl1_pixbuf_compat() {
   source /etc/os-release || return 0
 
-  # Only relevant for WSL1 + Fedora 43 where gdk-pixbuf 2.44 pulls glycin stack
+  # Only relevant for WSL1 + Fedora 43+ where gdk-pixbuf 2.44 pulls glycin stack
   if ! is_wsl1; then
     return 0
   fi
@@ -89,8 +89,8 @@ function ensure_wsl1_pixbuf_compat() {
     return 0
   fi
 
-  # Scope guard: only enforce on Fedora 43 (expand to >=43 if needed)
-  if [[ "${VERSION_ID}" != "43" ]]; then
+  # Scope guard: only enforce on Fedora 43 and later
+  if [[ "${VERSION_ID}" -lt 43 ]]; then
     return 0
   fi
 
@@ -112,7 +112,7 @@ function ensure_wsl1_pixbuf_compat() {
 
   # If not installed (empty pixbuf_vr), just install the pinned compatible version from WhitewaterFoundry repo
   if [[ -z "${pixbuf_vr}" ]]; then
-    # Assumption: WhitewaterFoundry repo provides gdk-pixbuf2-2.42.* for fc43
+    # Assumption: WhitewaterFoundry repo provides gdk-pixbuf2-2.42.* for fc43 and later
     dnf_install --allowerasing gdk-pixbuf2-2.42\*
   else
     # If installed >= 2.44.0, downgrade to 2.42.* from WhitewaterFoundry repo
@@ -201,8 +201,8 @@ sudo chmod +x /usr/local/bin/install-desktop.sh
 source /etc/os-release
 
 if [[ "$(uname -m)" == "x86_64" ]]; then
-  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43')
-  declare -a target_version=('40' '41' '42' '43')
+  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43' '26.2.4-1.fc44')
+  declare -a target_version=('40' '41' '42' '43' '44')
   declare -i length=${#mesa_version[@]}
 
   for ((i = 0; i < length; i++)); do

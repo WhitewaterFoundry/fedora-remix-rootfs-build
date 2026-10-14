@@ -36,7 +36,7 @@ function build() {
   mount --bind /dev "${TMPDIR}"/dist/dev
 
   echo "##[section] Install required packages, exclude unnecessary packages to reduce image size"
-  dnf --installroot="${TMPDIR}"/dist --forcearch="${arch}" --releasever="${version_id}" -y install @core libgcc glibc-langpack-en bash-color-prompt --exclude=grub\*,sssd-kcm,sssd-common,sssd-client,linux-firmware,dracut*,plymouth,parted,e2fsprogs,iprutils,iptables,ppc64-utils,selinux-policy*,policycoreutils,sendmail,kernel*,firewalld,fedora-release,fedora-logos,fedora-release-notes --allowerasing
+  dnf --installroot="${TMPDIR}"/dist --forcearch="${arch}" --releasever="${version_id}" -y install @core libgcc glibc-langpack-en bash-color-prompt systemd-pam --exclude=grub\*,sssd-kcm,sssd-common,sssd-client,linux-firmware,dracut*,plymouth,parted,e2fsprogs,iprutils,iptables,ppc64-utils,selinux-policy*,policycoreutils,sendmail,kernel*,firewalld,fedora-release,fedora-logos,fedora-release-notes --allowerasing
 
   echo "##[section] Unmount /dev"
   umount "${TMPDIR}"/dist/dev
@@ -165,7 +165,7 @@ EOF
 
   echo "##[section] 'Install MESA"
   if [ "$arch" = "x86_64" ]; then
-    declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43')
+    declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43' '26.2.4-1.fc44')
     local i=$((${#mesa_version[@]} - 1))
     systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
@@ -246,7 +246,7 @@ function main() {
 
   mkdir -p "${TMPDIR}"
 
-  version_id=${3:-43}
+  version_id=${3:-44}
   # shellcheck source=linux_files/os-release-39
   source "linux_files/os-release-${version_id}"
 
