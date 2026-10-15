@@ -61,6 +61,14 @@ of the `noopenh264` stub.
 
 ### Shared pieces
 
+- Shell initialization (`00-remix.sh` and `00-remix.fish`) detects
+  `GNOME_REMOTE_DESKTOP_SESSION` or `KRDP_SESSION` and restores only `PATH`,
+  `WSL_DISTRO_NAME`, `WSL_INTEROP` and `WSL_SYSTEMD_EXECUTION_ARGS` from
+  `~/.systemd.env`, refreshing the interop socket from `/run/WSL`. This lets
+  desktop terminals invoke Windows programs without replacing the desktop's
+  `WAYLAND_DISPLAY` or `PULSE_SERVER`, or touching its Wayland links. These sessions
+  neither overwrite the saved native WSL environment nor run the legacy
+  systemd environment restore.
 - **`/etc/systemd/system/wsl-x11-unix.service`** (oneshot, enabled): WSLg mounts `/tmp/.X11-unix` as a
   read-only tmpfs, so mutter/KWin cannot create Xwayland sockets. The unit unmounts it, recreates it with mode
   1777, and links `X0 -> /mnt/wslg/.X11-unix/X0` so WSLg X apps keep working. **Verified**: Xwayland then
