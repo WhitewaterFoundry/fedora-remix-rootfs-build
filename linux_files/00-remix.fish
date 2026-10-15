@@ -33,6 +33,11 @@ function load_env_file --description 'Import lines like VAR='\''VALUE'\'''
         set -l key  $pair[1]
         set -l val  $pair[2]
 
+        # Optional allowlist for sessions that own their display and audio.
+        if test (count $argv) -gt 1; and not contains -- "$key" $argv[2..-1]
+            continue
+        end
+
         # strip surrounding single-quotes if present
         set val (string trim --chars "'" -- $val)
 
@@ -113,15 +118,33 @@ end
 ### 2. Display + WSL IPC
 
 function setup_display
+    if test -n "$GNOME_REMOTE_DESKTOP_SESSION"; or test -n "$KRDP_SESSION"
+        load_env_file "$systemd_saved_environment" PATH WSL_DISTRO_NAME WSL_INTEROP WSL_SYSTEMD_EXECUTION_ARGS
+        if test -d /run/WSL
+            setup_interop
+        end
+        if test -n "$WSL_INTEROP"
+            set -gx WSL2 1
+        end
+
+        # The desktop owns its display, audio, and Wayland sockets.
+        return
+    end
+
     # XRDP session
     if test -n "$XRDP_SESSION"
         if test -f "$systemd_saved_environment"
             load_env_file $systemd_saved_environment
         end
 
+        # WSL_INTEROP is dynamic and the saved socket may no longer exist.
+        # Always refresh it when possible.
+        if test -d /run/WSL
+            setup_interop
+        end
+
         if test -n "$WSL_INTEROP"
             set -gx WSL2 1
-            setup_interop
         end
 
         set -e WAYLAND_DISPLAY
@@ -188,7 +211,7 @@ function setup_display
             set route_exec "$route_exec_path"
         end
 
-        set -l wsl2_d_tmp (eval "$route_exec print 2>/dev/null" | grep -a 0.0.0.0 | head -1 | awk '{print $4}')
+        set -l wsl2_d_tmp (eval "$route_exec print 2>/dev/null" | grep 0.0.0.0 | head -1 | awk '{print $4}')
 
         if test -n "$wsl2_d_tmp"
             set -gx DISPLAY "$wsl2_d_tmp":0
@@ -279,17 +302,28 @@ end
 ### ————————————————————————————————
 ### 5. Persist for systemd
 
-if test -z "$SYSTEMD_PID"
+# Keep a copy of the native WSL environment for sessions such as XRDP.
+# With native WSL systemd, systemd is already PID 1 when this runs, so
+# SYSTEMD_PID can't decide whether to save. Save only from a native WSL
+# session: remote desktop and SSH sessions must never overwrite it.
+if test -z "$XRDP_SESSION"; and test -z "$GNOME_REMOTE_DESKTOP_SESSION"; and test -z "$KRDP_SESSION"; and test -z "$SSH_CONNECTION"; and test -n "$WSL_INTEROP"
     save_environment
-else if test "$SYSTEMD_PID" -eq 1; and test -f "$systemd_saved_environment"; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
+end
+
+# Legacy compatibility for the old Fedora systemd bootstrap mechanism.
+# Remote desktops already restored the required environment in setup_display().
+# Restoring it again could overwrite their display and audio settings.
+if test -z "$XRDP_SESSION"; and test -z "$GNOME_REMOTE_DESKTOP_SESSION"; and test -z "$KRDP_SESSION"; and test -z "$SSH_CONNECTION"; and test -n "$SYSTEMD_PID"; and test "$SYSTEMD_PID" -eq 1; and test -f "$systemd_saved_environment"; and test -n "$WSL_SYSTEMD_EXECUTION_ARGS"
     load_env_file "$systemd_saved_environment"
     setup_interop
 end
 
+define_xdg_environment
+
 ### ————————————————————————————————
 ### 6. Windows‐home symlink
 
-if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1; and command -v wslpath > /dev/null 2>&1
+if test -z "$WIN_HOME"; and command -v cmd.exe > /dev/null 2>&1
     set -l wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' 2>/dev/null | tr -d '\r')
     if test (string length $wHomeWinPath) -le 3
         set wHomeWinPath (cmd.exe /c 'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' 2>/dev/null | tr -d '\r')
