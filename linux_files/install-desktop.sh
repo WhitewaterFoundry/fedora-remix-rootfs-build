@@ -209,9 +209,8 @@ function get_desktop_choice() {
   if ! desktop_choice=$(whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
     --title "Desktop Selection" --radiolist --separate-output \
     "Choose your desired Desktop Environment\n[SPACE to select, ENTER to confirm]:" \
-    12 50 2 \
-    "GNOME" "GNOME Desktop Environment   " on \
-    "KDE" "KDE Plasma Desktop" off 3>&1 1>&2 2>&3); then
+    12 50 1 \
+    "GNOME" "GNOME Desktop Environment   " on 3>&1 1>&2 2>&3); then
     echo "Error: Desktop selection cancelled" >&2
     return 1
   fi
