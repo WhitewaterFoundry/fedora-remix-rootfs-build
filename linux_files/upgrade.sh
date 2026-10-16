@@ -152,6 +152,11 @@ ensure_wsl1_pixbuf_compat
 dnf_update
 fix_wsl1
 
+# Ensure systemd-Pam is installed on WSL2
+if ! is_wsl1 && ! rpm -q systemd-pam >/dev/null 2>&1; then
+  dnf_install systemd-pam
+fi
+
 ensure_wsl1_pixbuf_compat
 
 # Remove old COPR wslu repositories for all Fedora versions
