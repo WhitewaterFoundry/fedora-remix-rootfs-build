@@ -87,6 +87,8 @@ function ensure_wsl1_pixbuf_compat() {
   # If memfd exists, no need to do anything (future-proof)
   if has_memfd; then
     return 0
+  else
+    echo "memfd not implemented, making the workaround for wsl1"
   fi
 
   # Scope guard: only enforce on Fedora 43 and later
@@ -152,6 +154,11 @@ ensure_wsl1_pixbuf_compat
 dnf_update
 fix_wsl1
 
+# Ensure systemd-Pam is installed on WSL2
+if ! is_wsl1 && ! rpm -q systemd-pam >/dev/null 2>&1; then
+  dnf_install systemd-pam
+fi
+
 ensure_wsl1_pixbuf_compat
 
 # Remove old COPR wslu repositories for all Fedora versions
@@ -196,12 +203,14 @@ sudo curl -L -f "${base_url}/linux_files/local.conf" -o /etc/fonts/local.conf
 # Install additional scripts
 sudo curl -L -f "${base_url}/linux_files/install-desktop.sh" -o /usr/local/bin/install-desktop.sh
 sudo chmod +x /usr/local/bin/install-desktop.sh
+sudo curl -L -f "${base_url}/linux_files/install-desktop-xorg.sh" -o /usr/local/bin/install-desktop-xorg.sh
+sudo chmod +x /usr/local/bin/install-desktop-xorg.sh
 
 # Install mesa
 source /etc/os-release
 
 if [[ "$(uname -m)" == "x86_64" ]]; then
-  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43' '26.2.4-1.fc44')
+  declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43' '26.2.4-1_wsl.fc44')
   declare -a target_version=('40' '41' '42' '43' '44')
   declare -i length=${#mesa_version[@]}
 
