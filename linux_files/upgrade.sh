@@ -203,6 +203,8 @@ sudo curl -L -f "${base_url}/linux_files/local.conf" -o /etc/fonts/local.conf
 # Install additional scripts
 sudo curl -L -f "${base_url}/linux_files/install-desktop.sh" -o /usr/local/bin/install-desktop.sh
 sudo chmod +x /usr/local/bin/install-desktop.sh
+sudo curl -L -f "${base_url}/linux_files/install-desktop-xorg.sh" -o /usr/local/bin/install-desktop-xorg.sh
+sudo chmod +x /usr/local/bin/install-desktop-xorg.sh
 
 # Install mesa
 source /etc/os-release

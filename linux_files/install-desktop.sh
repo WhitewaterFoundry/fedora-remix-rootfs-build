@@ -801,8 +801,27 @@ function terminate_wsl_distribution() {
   fi
 }
 
+# Fedora 43 and older use the Xorg-based desktop setup.
+function run_legacy_desktop_setup() {
+  local fedora_version
+  fedora_version=$(. /etc/os-release && printf '%s' "${VERSION_ID:-}")
+
+  if [[ ${fedora_version} =~ ^[0-9]+$ ]] && ((fedora_version <= 43)); then
+    local xorg_script
+    xorg_script="$(dirname -- "${BASH_SOURCE[0]}")/install-desktop-xorg.sh"
+    if [[ ! -x ${xorg_script} ]]; then
+      echo "Error: Fedora ${fedora_version} requires ${xorg_script}, but it is unavailable" >&2
+      return 1
+    fi
+
+    exec "${xorg_script}" "$@"
+  fi
+}
+
 # Main setup function
 function main() {
+  run_legacy_desktop_setup "$@" || return 1
+
   echo "Starting Fedora Remix Desktop Setup..."
 
   # Ensure we are running inside WSL2 as a regular user
