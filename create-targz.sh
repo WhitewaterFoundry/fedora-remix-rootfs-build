@@ -165,7 +165,7 @@ EOF
 
   echo "##[section] 'Install MESA"
   if [ "$arch" = "x86_64" ]; then
-    declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43' '26.2.4-1.fc44')
+    declare -a mesa_version=('24.1.2-7_wsl.fc40' '24.2.5-1_wsl_2.fc41' '25.0.4-2_wsl_3.fc42' '25.3.6-2_wsl.fc43' '26.2.4-1_wsl.fc44')
     local i=$((${#mesa_version[@]} - 1))
     systemd-nspawn -q --resolv-conf="replace-host" -D "${TMPDIR}"/dist --pipe /bin/bash <<EOF
 dnf -y install 'dnf-command(versionlock)'
