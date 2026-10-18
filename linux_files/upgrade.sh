@@ -77,6 +77,7 @@ function dnf_downgrade() {
 # WSL1 Pixbuf/Glycin workaround
 # ----------------------------
 function ensure_wsl1_pixbuf_compat() {
+  set -x
   source /etc/os-release || return 0
 
   # Only relevant for WSL1 + Fedora 43+ where gdk-pixbuf 2.44 pulls glycin stack
@@ -144,6 +145,8 @@ function ensure_wsl1_pixbuf_compat() {
   if command -v gdk-pixbuf-query-loaders >/dev/null 2>&1; then
     sudo gdk-pixbuf-query-loaders --update-cache >/dev/null 2>&1 || true
   fi
+
+  set +x
 }
 
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
