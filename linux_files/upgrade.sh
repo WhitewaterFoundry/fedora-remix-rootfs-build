@@ -87,6 +87,8 @@ function ensure_wsl1_pixbuf_compat() {
   # If memfd exists, no need to do anything (future-proof)
   if has_memfd; then
     return 0
+  else
+    echo "memfd not implemented, making the workaround for wsl1"
   fi
 
   # Scope guard: only enforce on Fedora 43 and later
