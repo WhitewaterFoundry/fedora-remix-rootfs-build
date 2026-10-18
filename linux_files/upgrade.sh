@@ -77,7 +77,6 @@ function dnf_downgrade() {
 # WSL1 Pixbuf/Glycin workaround
 # ----------------------------
 function ensure_wsl1_pixbuf_compat() {
-  set -x
   source /etc/os-release || return 0
 
   # Only relevant for WSL1 + Fedora 43+ where gdk-pixbuf 2.44 pulls glycin stack
@@ -113,8 +112,8 @@ function ensure_wsl1_pixbuf_compat() {
     return "${rpm_rc}"
   fi
 
-  # If not installed (empty pixbuf_vr), just install the pinned compatible version from WhitewaterFoundry repo
-  if [[ -z "${pixbuf_vr}" ]]; then
+  # rpm prints a diagnostic to stdout when the package is not installed.
+  if [[ ${rpm_rc} -eq 1 || -z "${pixbuf_vr}" ]]; then
     # Assumption: WhitewaterFoundry repo provides gdk-pixbuf2-2.42.* for fc43 and later
     dnf_install --allowerasing gdk-pixbuf2-2.42\*
   else
@@ -145,8 +144,6 @@ function ensure_wsl1_pixbuf_compat() {
   if command -v gdk-pixbuf-query-loaders >/dev/null 2>&1; then
     sudo gdk-pixbuf-query-loaders --update-cache >/dev/null 2>&1 || true
   fi
-
-  set +x
 }
 
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
