@@ -119,6 +119,7 @@ function ensure_wsl1_pixbuf_compat() {
   else
     # If installed >= 2.44.0, downgrade to 2.42.* from WhitewaterFoundry repo
     if ! rpm_ver_lt "${pixbuf_vr}" "2.44.0-0"; then
+      sudo dnf versionlock delete gdk-pixbuf2 >/dev/null 2>&1 || true
       dnf_downgrade --allowerasing gdk-pixbuf2-2.42\*
     fi
   fi
