@@ -16,6 +16,16 @@
 
 set -euo pipefail
 
+fedora_version=$(. /etc/os-release && printf '%s' "${VERSION_ID:-}")
+if [[ ${fedora_version} =~ ^[0-9]+$ ]] && ((10#${fedora_version} >= 44)); then
+  desktop_script="$(dirname -- "${BASH_SOURCE[0]}")/install-desktop.sh"
+  if [[ ! -x ${desktop_script} ]]; then
+    echo "Error: Fedora ${fedora_version} requires ${desktop_script}, but it is unavailable" >&2
+    exit 1
+  fi
+  exec "${desktop_script}" "$@"
+fi
+
 # Constants
 readonly PENGWIN_SETUP_TITLE="Pengwin Setup"
 readonly DEFAULT_HOSTNAME="fedoraremix"
