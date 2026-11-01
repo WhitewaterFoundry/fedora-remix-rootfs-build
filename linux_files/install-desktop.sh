@@ -9,9 +9,10 @@
 #
 #   GNOME - headless GNOME session (gnome-headless-session@.service from gdm)
 #           shared by gnome-remote-desktop in headless mode.
-#   KDE   - headless Plasma Wayland session (KWin virtual backend) shared by
-#           KRdp, authenticating with the Linux user account through PAM.
+#   KDE   - KDE Plasma Wayland session, nested in the Xorg session served by xrdp,
+#           using the Linux account.
 #   Xfce  - XFCE 4 Xorg session served by xrdp, using the Linux account.
+#   LXDE  - LXDE Xorg session served by xrdp, using the Linux account.
 #
 # Globals:
 #   PENGWIN_SETUP_TITLE - Title for whiptail dialogs
@@ -28,11 +29,12 @@ readonly PENGWIN_SETUP_TITLE="Pengwin Setup"
 readonly DEFAULT_HOSTNAME="fedoraremix"
 readonly DEFAULT_RDP_PORT="3396"
 readonly DEFAULT_LOCALE="en_US.UTF-8"
-readonly KDE_HEADLESS_WIDTH="1920"
-readonly KDE_HEADLESS_HEIGHT="1080"
 readonly SYSTEMD_SYSTEM_DIR="/etc/systemd/system"
 readonly X11_UNIX_FIX_SERVICE="wsl-x11-unix.service"
-readonly PLASMA_HEADLESS_PAM="plasma-headless"
+readonly XORG_SERVER="/usr/libexec/Xorg"
+readonly XRDP_XORG_CONF="/etc/X11/xrdp/xorg.conf"
+readonly XRDP_HELPERS_DIR="/usr/local/libexec/xrdp-wsl"
+readonly XRDP_SESMAN_PAM="/etc/pam.d/xrdp-sesman"
 CURRENT_USER="$(id -un)"
 readonly CURRENT_USER
 
@@ -93,10 +95,6 @@ function show_configuration_summary() {
   local credentials_hint
   if [[ ${desktop_choice} == "GNOME" ]]; then
     credentials_hint="Log in with the RDP username and password you entered in this setup."
-  elif [[ ${desktop_choice} == "KDE" ]]; then
-    credentials_hint="Log in with your Linux username and password. KRdp does not support NLA logins with\n"
-    credentials_hint+="Linux accounts: in mstsc save the connection as an .rdp file and add the line\n"
-    credentials_hint+="  enablecredsspsupport:i:0"
   else
     credentials_hint="Select Xorg in the xrdp login screen and log in with your Linux username and password."
   fi
@@ -212,9 +210,11 @@ function get_desktop_choice() {
   if ! desktop_choice=$(whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
     --title "Desktop Selection" --radiolist --separate-output \
     "Choose your desired Desktop Environment\n[SPACE to select, ENTER to confirm]:" \
-    13 60 2 \
+    15 60 4 \
     "GNOME" "GNOME Desktop (GNOME Remote Desktop)" on \
-    "Xfce" "XFCE 4 Desktop (xrdp)" off 3>&1 1>&2 2>&3); then
+    "KDE" "KDE Plasma Desktop (xrdp)" off \
+    "Xfce" "XFCE 4 Desktop (xrdp)" off \
+    "LXDE" "LXDE Desktop (xrdp)" off 3>&1 1>&2 2>&3); then
     echo "Error: Desktop selection cancelled" >&2
     return 1
   fi
@@ -326,12 +326,15 @@ function install_desktop_environment() {
   desktop_group["GNOME"]="gnome-desktop"
   desktop_group["KDE"]="kde-desktop"
   desktop_group["Xfce"]="xfce-desktop"
+  desktop_group["LXDE"]="lxde-desktop"
 
   # Remote desktop packages, gdm provides gnome-headless-session@.service
   declare -A desktop_rdp_packages
   desktop_rdp_packages["GNOME"]="gnome-remote-desktop gdm gnome-session-wayland-session accountsservice"
-  desktop_rdp_packages["KDE"]="krdp kwin plasma-workspace kf6-kconfig"
+  # Plasma 6.8 dropped the X11 session, KDE runs KWin Wayland nested in xrdp's Xorg, which needs glamor's DRI3
+  desktop_rdp_packages["KDE"]="xrdp xorgxrdp-glamor xorg-x11-xinit-session xdpyinfo kf6-kconfig"
   desktop_rdp_packages["Xfce"]="xrdp xorgxrdp xorg-x11-xinit-session"
+  desktop_rdp_packages["LXDE"]="xrdp xorgxrdp xorg-x11-xinit-session"
 
   local group_to_install="${desktop_group[${desktop_choice}]:-}"
 
@@ -345,9 +348,10 @@ function install_desktop_environment() {
     return 1
   fi
 
+  # --allowerasing swaps xorgxrdp and xorgxrdp-glamor when changing between KDE and the other xrdp desktops
   local -a rdp_packages
   read -r -a rdp_packages <<<"${desktop_rdp_packages[${desktop_choice}]}"
-  if ! sudo dnf -y install "${rdp_packages[@]}"; then
+  if ! sudo dnf -y install --allowerasing "${rdp_packages[@]}"; then
     echo "Error: Failed to install ${desktop_choice} remote desktop packages" >&2
     return 1
   fi
@@ -355,7 +359,7 @@ function install_desktop_environment() {
   disable_conflicting_desktop_services "${desktop_choice}" || return 1
 
   local -a conflicting_packages installed_conflicts=()
-  if [[ ${desktop_choice} == "Xfce" ]]; then
+  if [[ ${desktop_choice} != "GNOME" ]]; then
     conflicting_packages=(gnome-remote-desktop krdp)
   else
     conflicting_packages=(xrdp xorgxrdp)
@@ -371,14 +375,6 @@ function install_desktop_environment() {
     if ! sudo dnf -y --setopt=clean_requirements_on_remove=False remove "${installed_conflicts[@]}"; then
       echo "Error: Failed to remove conflicting remote desktop packages" >&2
       return 1
-    fi
-  fi
-
-  # KRdp only streams H.264, which needs the real Cisco OpenH264 library instead of the noopenh264 stub
-  if [[ ${desktop_choice} == "KDE" ]]; then
-    if ! sudo dnf -y install --allowerasing --enablerepo=fedora-cisco-openh264 openh264 &&
-      ! sudo dnf -y install --allowerasing openh264; then
-      echo "Warning: Failed to install openh264, KRdp may be unable to encode the video stream" >&2
     fi
   fi
 }
@@ -404,15 +400,13 @@ function configure_system_locale() {
 # Disable display managers and services belonging to the previous desktop
 function disable_conflicting_desktop_services() {
   local desktop_choice="${1}"
-  local -a units=(gdm.service sddm.service lightdm.service gnome-remote-desktop.service)
-  if [[ ${desktop_choice} != "Xfce" ]]; then
+  # plasma-headless-session@.service comes from the former KRdp based KDE setup
+  local -a units=(gdm.service sddm.service lightdm.service gnome-remote-desktop.service
+    "plasma-headless-session@${CURRENT_USER}.service")
+  if [[ ${desktop_choice} == "GNOME" ]]; then
     units+=(xrdp.service xrdp-sesman.service)
-  fi
-  if [[ ${desktop_choice} != "GNOME" ]]; then
+  else
     units+=("gnome-headless-session@${CURRENT_USER}.service")
-  fi
-  if [[ ${desktop_choice} != "KDE" ]]; then
-    units+=("plasma-headless-session@${CURRENT_USER}.service")
   fi
 
   local -a disable_args=(disable)
@@ -444,28 +438,64 @@ function disable_conflicting_desktop_services() {
   fi
 }
 
-# Configure XFCE sessions started by xrdp's Xorg backend
-function configure_xfce_remote_desktop() {
-  local rdp_port="${1}"
+# Configure the XFCE, KDE Plasma or LXDE sessions started by xrdp's Xorg backend
+function configure_xrdp_remote_desktop() {
+  local desktop_choice="${1}"
+  local rdp_port="${2}"
 
-  if [[ -z "${rdp_port}" ]]; then
-    echo "Error: rdp_port parameter is required" >&2
+  if [[ -z "${desktop_choice}" || -z "${rdp_port}" ]]; then
+    echo "Error: Both desktop_choice and rdp_port parameters are required" >&2
     return 1
   fi
 
-  # Fedora's Xsession prefers .xsession over .Xclients from an earlier desktop setup.
-  if ! cat >"${HOME}/.xsession" <<'EOF'; then
-#!/bin/sh
-unset DBUS_SESSION_BUS_ADDRESS SESSION_MANAGER WAYLAND_DISPLAY
+  local session_environment start_command
+  case "${desktop_choice}" in
+    KDE)
+      # Plasma 6.8 has no X11 session, KWin Wayland runs in a window on xrdp's Xorg display
+      session_environment="$(cat <<EOF
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=KDE
+export DESKTOP_SESSION=plasma
+export PATH="${XRDP_HELPERS_DIR}:\${PATH}"
+# KWin and xrdp's Xorg must use the same Mesa driver to share buffers through DRI3
+if [ -e /dev/dxg ]; then
+  export GALLIUM_DRIVER=d3d12
+fi
+EOF
+)"
+      start_command="startplasma-wayland"
+      ;;
+    *)
+      local current_desktop desktop_session
+      if [[ ${desktop_choice} == "LXDE" ]]; then
+        current_desktop="LXDE"
+        desktop_session="LXDE"
+        start_command="startlxde"
+      else
+        current_desktop="XFCE"
+        desktop_session="xfce"
+        start_command="startxfce4"
+      fi
+      session_environment="$(cat <<EOF
 export XDG_SESSION_TYPE=x11
-export XDG_CURRENT_DESKTOP=XFCE
-export DESKTOP_SESSION=xfce
+export XDG_CURRENT_DESKTOP=${current_desktop}
+export DESKTOP_SESSION=${desktop_session}
 # GTK can connect to WSLg's default Wayland socket even without WAYLAND_DISPLAY.
 export GDK_BACKEND=x11
 export QT_QPA_PLATFORM=xcb
-exec dbus-run-session -- startxfce4
 EOF
-    echo "Error: Failed to configure the XFCE session" >&2
+)"
+      ;;
+  esac
+
+  # Fedora's Xsession prefers .xsession over .Xclients from an earlier desktop setup.
+  if ! cat >"${HOME}/.xsession" <<EOF; then
+#!/bin/sh
+unset DBUS_SESSION_BUS_ADDRESS SESSION_MANAGER WAYLAND_DISPLAY
+${session_environment}
+exec dbus-run-session -- ${start_command}
+EOF
+    echo "Error: Failed to configure the ${desktop_choice} session" >&2
     return 1
   fi
 
@@ -481,8 +511,91 @@ EOF
     return 1
   fi
 
+  configure_xrdp_xorg "${desktop_choice}" || return 1
+
   if ! sudo systemctl enable xrdp.service; then
     echo "Error: Failed to enable xrdp.service" >&2
+    return 1
+  fi
+}
+
+# Select the Xorg server started by xrdp, KDE needs glamor on the GPU to display the nested KWin
+function configure_xrdp_xorg() {
+  local desktop_choice="${1}"
+  local xorg_server="${XORG_SERVER}"
+
+  if [[ ${desktop_choice} == "KDE" ]]; then
+    if ! sudo mkdir -p "${XRDP_HELPERS_DIR}" ||
+      ! sudo tee "${XRDP_HELPERS_DIR}/Xorg" >/dev/null <<EOF; then
+#!/bin/sh
+# glamor must use Mesa's D3D12 driver like KWin, otherwise the KWin window stays black
+if [ -e /dev/dxg ]; then
+  export GALLIUM_DRIVER=d3d12
+fi
+exec ${XORG_SERVER} "\$@"
+EOF
+      echo "Error: Failed to create ${XRDP_HELPERS_DIR}/Xorg" >&2
+      return 1
+    fi
+
+    # plasma_session starts kwin_wayland_wrapper from PATH, size its window to the xrdp screen
+    if ! sudo tee "${XRDP_HELPERS_DIR}/kwin_wayland_wrapper" >/dev/null <<'EOF'; then
+#!/bin/sh
+geometry="$(xdpyinfo 2>/dev/null | awk '/dimensions:/ {print $2; exit}')"
+if [ -n "${geometry}" ]; then
+  set -- --width "${geometry%x*}" --height "${geometry#*x}" "$@"
+fi
+exec /usr/bin/kwin_wayland_wrapper --x11-display "${DISPLAY}" "$@"
+EOF
+      echo "Error: Failed to create ${XRDP_HELPERS_DIR}/kwin_wayland_wrapper" >&2
+      return 1
+    fi
+
+    # /dev is shared by all WSL distros, so the render node may carry another distro's group and mode
+    if ! sudo tee "${XRDP_HELPERS_DIR}/fix-render-node" >/dev/null <<'EOF'; then
+#!/bin/sh
+# Run as root by pam_exec when sesman opens a session, before Xorg starts
+[ "${PAM_TYPE}" = "open_session" ] || exit 0
+for node in /dev/dri/renderD*; do
+  if [ -c "${node}" ]; then
+    chgrp render "${node}" && chmod 0666 "${node}"
+  fi
+done
+exit 0
+EOF
+      echo "Error: Failed to create ${XRDP_HELPERS_DIR}/fix-render-node" >&2
+      return 1
+    fi
+
+    if ! sudo chmod 755 "${XRDP_HELPERS_DIR}/Xorg" "${XRDP_HELPERS_DIR}/kwin_wayland_wrapper" \
+      "${XRDP_HELPERS_DIR}/fix-render-node"; then
+      echo "Error: Failed to make the xrdp helpers executable" >&2
+      return 1
+    fi
+
+    # WSL exposes the GPU to Mesa through the vgem device, which xorgxrdp does not allow by default
+    if ! grep -q '"DRMAllowList".*vgem' "${XRDP_XORG_CONF}" &&
+      ! sudo sed -i 's/\(Option "DRMAllowList" "[^"]*\)"/\1 vgem"/' "${XRDP_XORG_CONF}"; then
+      echo "Error: Failed to allow vgem in ${XRDP_XORG_CONF}" >&2
+      return 1
+    fi
+
+    if ! grep -q "fix-render-node" "${XRDP_SESMAN_PAM}" &&
+      ! echo "session    optional     pam_exec.so quiet ${XRDP_HELPERS_DIR}/fix-render-node" |
+      sudo tee -a "${XRDP_SESMAN_PAM}" >/dev/null; then
+      echo "Error: Failed to add the render node hook to ${XRDP_SESMAN_PAM}" >&2
+      return 1
+    fi
+
+    xorg_server="${XRDP_HELPERS_DIR}/Xorg"
+  elif ! sudo sed -i '/fix-render-node/d' "${XRDP_SESMAN_PAM}"; then
+    echo "Error: Failed to remove the render node hook from ${XRDP_SESMAN_PAM}" >&2
+    return 1
+  fi
+
+  if ! sudo sed -i -E "s#^param=(${XORG_SERVER}|${XRDP_HELPERS_DIR}/Xorg)\$#param=${xorg_server}#" /etc/xrdp/sesman.ini ||
+    ! grep -q "^param=${xorg_server}\$" /etc/xrdp/sesman.ini; then
+    echo "Error: Failed to set the Xorg server in /etc/xrdp/sesman.ini" >&2
     return 1
   fi
 }
@@ -684,128 +797,29 @@ EOF
   fi
 }
 
-# Configure the headless KDE Plasma session and KRdp
-function configure_kde_remote_desktop() {
-  local hostname="${1}"
-  local rdp_port="${2}"
+# Configure the KDE Plasma X11 session started by xrdp
+function configure_kde_session() {
+  local config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
+  local user_unit_dir="${config_home}/systemd/user"
 
-  if [[ -z "${hostname}" || -z "${rdp_port}" ]]; then
-    echo "Error: Both hostname and rdp_port parameters are required" >&2
+  echo "Configuring the KDE Plasma session..."
+
+  # The session runs on a private D-Bus bus without the systemd user manager, start Plasma without it
+  if ! kwriteconfig6 --file startkderc --group General --key systemdBoot false; then
+    echo "Error: Failed to disable the Plasma systemd boot" >&2
     return 1
   fi
 
-  local config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
-  local cert_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/krdpserver"
-
-  generate_tls_certificate "${cert_dir}" "${hostname}" || return 1
-
-  echo "Configuring KRdp..."
-
-  # KRdp authenticates against the Linux user account through PAM. This only works with TLS security,
-  # NLA fails with "Could not find user in SAM database" (also with --username/--password in KRdp 6.6)
-  local -a krdp_settings=(
-    "ListenPort ${rdp_port}"
-    "SystemUserEnabled true"
-    "AutogenerateCertificates false"
-    "Certificate ${cert_dir}/rdp-tls.crt"
-    "CertificateKey ${cert_dir}/rdp-tls.key"
-    "Autostart true"
-  )
-
-  local setting key value
-  for setting in "${krdp_settings[@]}"; do
-    key="${setting%% *}"
-    value="${setting#* }"
-    if ! kwriteconfig6 --file krdpserverrc --group General --key "${key}" "${value}"; then
-      echo "Error: Failed to set ${key} in krdpserverrc" >&2
-      return 1
-    fi
-  done
-
-  # A headless session has no screen to lock, keep it available for RDP
+  # A remote session has no screen to lock, keep it available for RDP
   kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false || true
   kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false || true
 
-  local user_unit_dir="${config_home}/systemd/user"
-
-  # Run KWin with the virtual backend since WSL has no display for the session
-  if ! mkdir -p "${user_unit_dir}/plasma-kwin_wayland.service.d" ||
-    ! cat >"${user_unit_dir}/plasma-kwin_wayland.service.d/headless.conf" <<EOF; then
-[Service]
-ExecStart=
-ExecStart=/usr/bin/kwin_wayland_wrapper --xwayland --virtual --no-lockscreen --width ${KDE_HEADLESS_WIDTH} --height ${KDE_HEADLESS_HEIGHT}
-EOF
-    echo "Error: Failed to configure plasma-kwin_wayland.service" >&2
-    return 1
-  fi
-
-  # Use the Plasma screencast protocols, the portal would ask for an interactive approval
-  if ! mkdir -p "${user_unit_dir}/app-org.kde.krdpserver.service.d" ||
-    ! cat >"${user_unit_dir}/app-org.kde.krdpserver.service.d/headless.conf" <<EOF; then
-[Service]
-ExecStart=
-ExecStart=/usr/bin/krdpserver --plasma --port ${rdp_port} --certificate ${cert_dir}/rdp-tls.crt --certificate-key ${cert_dir}/rdp-tls.key
-Restart=on-failure
-RestartSec=3
-EOF
-    echo "Error: Failed to configure app-org.kde.krdpserver.service" >&2
-    return 1
-  fi
-
-  if ! mkdir -p "${user_unit_dir}/plasma-workspace.target.wants" ||
-    ! ln -sf /usr/lib/systemd/user/app-org.kde.krdpserver.service "${user_unit_dir}/plasma-workspace.target.wants/"; then
-    echo "Error: Failed to enable app-org.kde.krdpserver.service" >&2
-    return 1
-  fi
-
-  # PAM stack for the session service, it only opens the session and never authenticates anyone
-  if ! sudo tee "/etc/pam.d/${PLASMA_HEADLESS_PAM}" >/dev/null <<'EOF'; then
-#%PAM-1.0
-auth       required    pam_deny.so
-account    required    pam_nologin.so
-account    include     system-auth
-password   required    pam_deny.so
-session    optional    pam_loginuid.so
-session    optional    pam_keyinit.so force revoke
-session    include     system-auth
-session    include     postlogin
-EOF
-    echo "Error: Failed to create /etc/pam.d/${PLASMA_HEADLESS_PAM}" >&2
-    return 1
-  fi
-
-  # Logind session running startplasma-wayland, the equivalent of GNOME's gnome-headless-session@.service
-  if ! sudo tee "${SYSTEMD_SYSTEM_DIR}/plasma-headless-session@.service" >/dev/null <<EOF; then
-[Unit]
-Description=KDE Plasma headless session for %i
-After=systemd-user-sessions.service dbus.service ${X11_UNIX_FIX_SERVICE}
-Wants=${X11_UNIX_FIX_SERVICE}
-
-[Service]
-Type=simple
-User=%i
-PAMName=${PLASMA_HEADLESS_PAM}
-WorkingDirectory=~
-Environment=XDG_SESSION_TYPE=wayland
-Environment=XDG_SESSION_CLASS=user
-Environment=XDG_SESSION_DESKTOP=KDE
-Environment=XDG_CURRENT_DESKTOP=KDE
-Environment=DESKTOP_SESSION=plasma
-Environment=KRDP_SESSION=1
-ExecStart=/bin/sh -c 'export DBUS_SESSION_BUS_ADDRESS="unix:path=\$\${XDG_RUNTIME_DIR}/bus"; exec /usr/bin/startplasma-wayland'
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    echo "Error: Failed to create plasma-headless-session@.service" >&2
-    return 1
-  fi
-
-  if ! sudo systemctl enable "plasma-headless-session@${CURRENT_USER}.service"; then
-    echo "Error: Failed to enable plasma-headless-session@${CURRENT_USER}.service" >&2
-    return 1
+  # Remove the leftovers of the former KRdp based setup
+  rm -f "${user_unit_dir}/plasma-kwin_wayland.service.d/headless.conf" \
+    "${user_unit_dir}/app-org.kde.krdpserver.service.d/headless.conf" \
+    "${user_unit_dir}/plasma-workspace.target.wants/app-org.kde.krdpserver.service"
+  if [[ -f "${SYSTEMD_SYSTEM_DIR}/plasma-headless-session@.service" ]]; then
+    sudo rm -f "${SYSTEMD_SYSTEM_DIR}/plasma-headless-session@.service" /etc/pam.d/plasma-headless || true
   fi
 }
 
@@ -966,10 +980,11 @@ function main() {
 
   if [[ ${desktop_choice} == "GNOME" ]]; then
     configure_gnome_remote_desktop "${hostname}" "${rdp_port}" "${rdp_username}" "${rdp_password}" || return 1
-  elif [[ ${desktop_choice} == "Xfce" ]]; then
-    configure_xfce_remote_desktop "${rdp_port}" || return 1
   else
-    configure_kde_remote_desktop "${hostname}" "${rdp_port}" || return 1
+    if [[ ${desktop_choice} == "KDE" ]]; then
+      configure_kde_session || return 1
+    fi
+    configure_xrdp_remote_desktop "${desktop_choice}" "${rdp_port}" || return 1
   fi
 
   # Mask conflicting services for WSL
