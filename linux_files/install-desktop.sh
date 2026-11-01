@@ -3,7 +3,7 @@
 # install-desktop.sh - Fedora Remix Desktop Setup Script
 #
 # This script provides an interactive setup for configuring a remote desktop
-# in Fedora Remix WSL distribution. It installs GNOME or KDE Plasma and runs a
+# in Fedora Remix WSL distribution. It installs GNOME, KDE Plasma or XFCE and runs a
 # headless (no physical display) session that can be reached from Windows with
 # the Remote Desktop Connection client (mstsc):
 #
@@ -11,6 +11,7 @@
 #           shared by gnome-remote-desktop in headless mode.
 #   KDE   - headless Plasma Wayland session (KWin virtual backend) shared by
 #           KRdp, authenticating with the Linux user account through PAM.
+#   Xfce  - XFCE 4 Xorg session served by xrdp, using the Linux account.
 #
 # Globals:
 #   PENGWIN_SETUP_TITLE - Title for whiptail dialogs
@@ -92,10 +93,12 @@ function show_configuration_summary() {
   local credentials_hint
   if [[ ${desktop_choice} == "GNOME" ]]; then
     credentials_hint="Log in with the RDP username and password you entered in this setup."
-  else
+  elif [[ ${desktop_choice} == "KDE" ]]; then
     credentials_hint="Log in with your Linux username and password. KRdp does not support NLA logins with\n"
     credentials_hint+="Linux accounts: in mstsc save the connection as an .rdp file and add the line\n"
     credentials_hint+="  enablecredsspsupport:i:0"
+  else
+    credentials_hint="Select Xorg in the xrdp login screen and log in with your Linux username and password."
   fi
 
   local summary_text=""
@@ -209,8 +212,9 @@ function get_desktop_choice() {
   if ! desktop_choice=$(whiptail --backtitle "${PENGWIN_SETUP_TITLE}" \
     --title "Desktop Selection" --radiolist --separate-output \
     "Choose your desired Desktop Environment\n[SPACE to select, ENTER to confirm]:" \
-    12 50 1 \
-    "GNOME" "GNOME Desktop Environment   " on 3>&1 1>&2 2>&3); then
+    13 60 2 \
+    "GNOME" "GNOME Desktop (GNOME Remote Desktop)" on \
+    "Xfce" "XFCE 4 Desktop (xrdp)" off 3>&1 1>&2 2>&3); then
     echo "Error: Desktop selection cancelled" >&2
     return 1
   fi
@@ -321,11 +325,13 @@ function install_desktop_environment() {
   declare -A desktop_group
   desktop_group["GNOME"]="gnome-desktop"
   desktop_group["KDE"]="kde-desktop"
+  desktop_group["Xfce"]="xfce-desktop"
 
   # Remote desktop packages, gdm provides gnome-headless-session@.service
   declare -A desktop_rdp_packages
   desktop_rdp_packages["GNOME"]="gnome-remote-desktop gdm gnome-session-wayland-session accountsservice"
   desktop_rdp_packages["KDE"]="krdp kwin plasma-workspace kf6-kconfig"
+  desktop_rdp_packages["Xfce"]="xrdp xorgxrdp xorg-x11-xinit-session"
 
   local group_to_install="${desktop_group[${desktop_choice}]:-}"
 
@@ -344,6 +350,28 @@ function install_desktop_environment() {
   if ! sudo dnf -y install "${rdp_packages[@]}"; then
     echo "Error: Failed to install ${desktop_choice} remote desktop packages" >&2
     return 1
+  fi
+
+  disable_conflicting_desktop_services "${desktop_choice}" || return 1
+
+  local -a conflicting_packages installed_conflicts=()
+  if [[ ${desktop_choice} == "Xfce" ]]; then
+    conflicting_packages=(gnome-remote-desktop krdp)
+  else
+    conflicting_packages=(xrdp xorgxrdp)
+  fi
+
+  local package
+  for package in "${conflicting_packages[@]}"; do
+    if rpm -q "${package}" >/dev/null 2>&1; then
+      installed_conflicts+=("${package}")
+    fi
+  done
+  if (( ${#installed_conflicts[@]} > 0 )); then
+    if ! sudo dnf -y --setopt=clean_requirements_on_remove=False remove "${installed_conflicts[@]}"; then
+      echo "Error: Failed to remove conflicting remote desktop packages" >&2
+      return 1
+    fi
   fi
 
   # KRdp only streams H.264, which needs the real Cisco OpenH264 library instead of the noopenh264 stub
@@ -373,18 +401,90 @@ function configure_system_locale() {
   fi
 }
 
-# Disable services that conflict with the headless remote desktop
+# Disable display managers and services belonging to the previous desktop
 function disable_conflicting_desktop_services() {
+  local desktop_choice="${1}"
+  local -a units=(gdm.service sddm.service lightdm.service gnome-remote-desktop.service)
+  if [[ ${desktop_choice} != "Xfce" ]]; then
+    units+=(xrdp.service xrdp-sesman.service)
+  fi
+  if [[ ${desktop_choice} != "GNOME" ]]; then
+    units+=("gnome-headless-session@${CURRENT_USER}.service")
+  fi
+  if [[ ${desktop_choice} != "KDE" ]]; then
+    units+=("plasma-headless-session@${CURRENT_USER}.service")
+  fi
+
+  local -a disable_args=(disable)
+  if [[ -d /run/systemd/system ]]; then
+    disable_args+=(--now)
+  fi
+
   local unit
-  # Display managers cannot drive a physical display in WSL, and a previous xrdp setup would hold the RDP port
-  for unit in gdm.service sddm.service xrdp.service xrdp-sesman.service; do
-    if [[ -f "/usr/lib/systemd/system/${unit}" || -f "${SYSTEMD_SYSTEM_DIR}/${unit}" ]]; then
-      if ! sudo systemctl disable "${unit}"; then
+  for unit in "${units[@]}"; do
+    local template="${unit/@${CURRENT_USER}/@}"
+    if [[ -f "/usr/lib/systemd/system/${template}" || -f "${SYSTEMD_SYSTEM_DIR}/${template}" ||
+      -L "${SYSTEMD_SYSTEM_DIR}/multi-user.target.wants/${unit}" ]]; then
+      if ! sudo systemctl "${disable_args[@]}" "${unit}"; then
         echo "Error: Failed to disable ${unit}" >&2
         return 1
       fi
     fi
   done
+
+  if [[ ${desktop_choice} != "GNOME" ]]; then
+    for unit in gnome-remote-desktop.service gnome-remote-desktop-headless.service; do
+      if [[ -f "/usr/lib/systemd/user/${unit}" && -S "/run/user/$(id -u)/bus" ]]; then
+        if ! run_with_session_bus systemctl --user disable --now "${unit}"; then
+          echo "Error: Failed to disable user service ${unit}" >&2
+          return 1
+        fi
+      fi
+    done
+  fi
+}
+
+# Configure XFCE sessions started by xrdp's Xorg backend
+function configure_xfce_remote_desktop() {
+  local rdp_port="${1}"
+
+  if [[ -z "${rdp_port}" ]]; then
+    echo "Error: rdp_port parameter is required" >&2
+    return 1
+  fi
+
+  # Fedora's Xsession prefers .xsession over .Xclients from an earlier desktop setup.
+  if ! cat >"${HOME}/.xsession" <<'EOF'; then
+#!/bin/sh
+unset DBUS_SESSION_BUS_ADDRESS SESSION_MANAGER WAYLAND_DISPLAY
+export XDG_SESSION_TYPE=x11
+export XDG_CURRENT_DESKTOP=XFCE
+export DESKTOP_SESSION=xfce
+# GTK can connect to WSLg's default Wayland socket even without WAYLAND_DISPLAY.
+export GDK_BACKEND=x11
+export QT_QPA_PLATFORM=xcb
+exec dbus-run-session -- startxfce4
+EOF
+    echo "Error: Failed to configure the XFCE session" >&2
+    return 1
+  fi
+
+  if ! chmod +x "${HOME}/.xsession" ||
+    ! sudo crudini --set /etc/xrdp/xrdp.ini Globals port "${rdp_port}" ||
+    ! sudo mkdir -p "${SYSTEMD_SYSTEM_DIR}/xrdp.service.d" ||
+    ! sudo tee "${SYSTEMD_SYSTEM_DIR}/xrdp.service.d/wsl.conf" >/dev/null <<EOF; then
+[Unit]
+After=${X11_UNIX_FIX_SERVICE}
+Wants=${X11_UNIX_FIX_SERVICE}
+EOF
+    echo "Error: Failed to configure xrdp" >&2
+    return 1
+  fi
+
+  if ! sudo systemctl enable xrdp.service; then
+    echo "Error: Failed to enable xrdp.service" >&2
+    return 1
+  fi
 }
 
 # Install a service that makes /tmp/.X11-unix writable so the headless compositor can start Xwayland
@@ -861,12 +961,13 @@ function main() {
   configure_wsl_settings "${hostname}" || return 1
   install_desktop_environment "${desktop_choice}" || return 1
   configure_system_locale "${systemd_pid}" || return 1
-  disable_conflicting_desktop_services || return 1
   install_x11_unix_fix_service || return 1
   enable_avahi_service || return 1
 
   if [[ ${desktop_choice} == "GNOME" ]]; then
     configure_gnome_remote_desktop "${hostname}" "${rdp_port}" "${rdp_username}" "${rdp_password}" || return 1
+  elif [[ ${desktop_choice} == "Xfce" ]]; then
+    configure_xfce_remote_desktop "${rdp_port}" || return 1
   else
     configure_kde_remote_desktop "${hostname}" "${rdp_port}" || return 1
   fi
