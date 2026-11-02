@@ -175,7 +175,7 @@ setup_display() {
 
     wsl2_d_tmp="$(
       eval "$route_exec print 2> /dev/null" |
-        grep 0.0.0.0 |
+        grep -a 0.0.0.0 |
         head -1 |
         awk '{print $4}'
     )"
