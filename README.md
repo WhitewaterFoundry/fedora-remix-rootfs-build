@@ -1,5 +1,19 @@
 # fedora-remix-rootfs-build
 
+## DNF4 autoremove protected package error
+
+After a release upgrade, `dnf4 autoremove` can fail because it tries to remove
+the protected `grub2-tools-minimal` package as an unused dependency. If this
+happens, mark the installed package as user-installed and retry cleanup:
+
+```bash
+sudo dnf4 mark install grub2-tools-minimal &&
+  sudo dnf4 -y autoremove
+```
+
+This keeps the package and its protection in place. Run these commands after
+the system upgrade, before or instead of retrying the autoremove step.
+
 ## Fedora 43 to 44 repository CA-bundle workaround
 
 The [Fedora Remix for WSL 44.0.0 upgrade instructions](https://www.whitewaterfoundry.com/blog/2026/11/2/fedora-remix-for-wsl-4400-released)
