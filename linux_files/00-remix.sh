@@ -411,7 +411,7 @@ main() {
     # Here has an issue: %HOMEDRIVE% might be using a custom set location.
     # Moving cmd to where Windows is installed might help: %SYSTEMDRIVE%.
     wHomeWinPath="$(
-      cmd.exe /c \
+      cmd.exe /d /c \
         'cd %SYSTEMDRIVE%\ && echo %HOMEDRIVE%%HOMEPATH%' \
         2>/dev/null |
         tr -d '\r'
@@ -419,7 +419,7 @@ main() {
 
     if [ ${#wHomeWinPath} -le 3 ]; then #wHomeWinPath contains something like H:\
       wHomeWinPath="$(
-        cmd.exe /c \
+        cmd.exe /d /c \
           'cd %SYSTEMDRIVE%\ && echo %USERPROFILE%' \
           2>/dev/null |
           tr -d '\r'
