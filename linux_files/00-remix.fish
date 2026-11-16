@@ -211,7 +211,7 @@ function setup_display
             set route_exec "$route_exec_path"
         end
 
-        set -l wsl2_d_tmp (eval "$route_exec print 2>/dev/null" | grep 0.0.0.0 | head -1 | awk '{print $4}')
+        set -l wsl2_d_tmp (eval "$route_exec print 2>/dev/null" | grep -a 0.0.0.0 | head -1 | awk '{print $4}')
 
         if test -n "$wsl2_d_tmp"
             set -gx DISPLAY "$wsl2_d_tmp":0
