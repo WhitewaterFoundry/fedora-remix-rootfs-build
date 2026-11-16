@@ -693,6 +693,36 @@ function generate_tls_certificate() {
   chmod 600 "${cert_dir}/rdp-tls.key"
 }
 
+# grdctl crashes with a segmentation fault when the gnome-remote-desktop system user is missing,
+# which happens when the package's sysusers scriptlet could not create it
+function ensure_grd_system_user() {
+  local grd_user="gnome-remote-desktop"
+
+  if getent passwd "${grd_user}" >/dev/null; then
+    return 0
+  fi
+
+  echo "Creating the ${grd_user} system user..."
+
+  # systemd-sysusers may be replaced by a no-op on WSL1 upgrades, check the user again afterwards
+  local sysusers_conf="/usr/lib/sysusers.d/${grd_user}-sysusers.conf"
+  if [[ -f "${sysusers_conf}" ]]; then
+    sudo systemd-sysusers "${sysusers_conf}" || true
+  fi
+
+  if ! getent passwd "${grd_user}" >/dev/null &&
+    ! sudo useradd --system --user-group --no-create-home --home-dir "/var/lib/${grd_user}" \
+      --shell /usr/sbin/nologin --comment "GNOME Remote Desktop" "${grd_user}"; then
+    echo "Error: Failed to create the ${grd_user} system user" >&2
+    return 1
+  fi
+
+  local tmpfiles_conf="/usr/lib/tmpfiles.d/${grd_user}-tmpfiles.conf"
+  if [[ -f "${tmpfiles_conf}" ]]; then
+    sudo systemd-tmpfiles --create "${tmpfiles_conf}" || true
+  fi
+}
+
 # Configure the headless GNOME session and gnome-remote-desktop
 function configure_gnome_remote_desktop() {
   local hostname="${1}"
@@ -709,6 +739,7 @@ function configure_gnome_remote_desktop() {
   local cert_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/gnome-remote-desktop"
 
   generate_tls_certificate "${cert_dir}" "${hostname}" || return 1
+  ensure_grd_system_user || return 1
 
   echo "Configuring GNOME Remote Desktop..."
 
