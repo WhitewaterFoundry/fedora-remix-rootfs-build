@@ -11,7 +11,10 @@ exists:
 ```bash
 for repo in /etc/yum.repos.d/whitewaterfoundry_{fedoraremix,wslu}.repo; do
   if [[ -f "$repo" ]] && grep -qxF 'sslcacert=/etc/pki/tls/certs/ca-bundle.crt' "$repo"; then
-    sudo sed -i.bak \
+    if [[ ! -e "$repo.bak" && ! -L "$repo.bak" ]]; then
+      sudo cp -p -- "$repo" "$repo.bak" || continue
+    fi
+    sudo sed -i \
       's|^sslcacert=/etc/pki/tls/certs/ca-bundle.crt$|sslcacert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem|' \
       "$repo"
   fi
