@@ -149,6 +149,11 @@ function ensure_wsl1_pixbuf_compat() {
 sudo rm -f /etc/yum.repos.d/wslutilties.repo
 fix_wsl1
 
+# Keep the protected package from being selected as an unused dependency by DNF4.
+if command -v dnf4 >/dev/null 2>&1 && rpm -q grub2-tools-minimal >/dev/null 2>&1; then
+  sudo dnf4 mark install grub2-tools-minimal || echo "Warning: could not mark grub2-tools-minimal as user-installed for DNF4." >&2
+fi
+
 # Run compat enforcement BEFORE and AFTER update:
 ensure_wsl1_pixbuf_compat
 
